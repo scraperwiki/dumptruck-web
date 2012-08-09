@@ -1,3 +1,4 @@
+import os
 import cgi
 import sqlite3
 import dumptruck
@@ -19,9 +20,16 @@ def authorizer_readonly(action_code, tname, cname, sql_location, trigger):
 
     return sqlite3.SQLITE_DENY
 
-
+DB = 'dumptruck.db'
 def dumptruck_web(query):
-    dt = dumptruck.DumpTruck()
+    if os.path.isfile(DB):
+        # Check for the database file
+        dt = dumptruck.DumpTruck(DB)
+
+    else:
+        # Use a memory database if there is no dumptruck.db
+        dt = dumptruck.DumpTruck(':memory:')
+
     dt.connection.set_authorizer(authorizer_readonly)
 
     if "q" not in query:

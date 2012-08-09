@@ -56,7 +56,7 @@ class TestFileness(unittest.TestCase):
         self.assertFalse(os.path.isfile(DB))
 
         # Empty list is returned
-        self.assertListEqual(json.loads(observedData), [])
+        self.assertListEqual(demjson.decode(observedData), [])
 
         # All is well.
         self.assertEqual(observedCode, 200)
