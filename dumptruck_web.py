@@ -20,11 +20,10 @@ def authorizer_readonly(action_code, tname, cname, sql_location, trigger):
 
     return sqlite3.SQLITE_DENY
 
-DB = 'dumptruck.db'
-def dumptruck_web(query):
-    if os.path.isfile(DB):
+def dumptruck_web(query, dbname):
+    if os.path.isfile(dbname):
         # Check for the database file
-        dt = dumptruck.DumpTruck(DB)
+        dt = dumptruck.DumpTruck(dbname)
 
     else:
         # Use a memory database if there is no dumptruck.db
@@ -56,10 +55,7 @@ def dumptruck_web(query):
     return code, demjson.encode(data)
 
 
-if __name__ == "__main__":
-    # http://docs.python.org/library/cgi.html
-
+def sqlite_api(dbname):
     form = cgi.FieldStorage()
     qs = {name: form[name].value for name in form.keys()}
-
-    dumptruck_web(qs)
+    dumptruck_web(qs, dbname)
