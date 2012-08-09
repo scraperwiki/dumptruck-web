@@ -1,11 +1,12 @@
-from dumptruck_web import query
+from dumptruck_web import sqlite_api
 
 def main():
     # Settings
     # import demjson
     # DB = demjson.decode(open('../sw.json').read())['database']
 
-    query('dumptruck.db')
+    return sqlite_api('dumptruck.db')
 
 if __name__ == "__main__":
-    main()
+    http = main()
+    print http

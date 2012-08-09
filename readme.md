@@ -20,3 +20,8 @@ http://stackoverflow.com/questions/7048057/running-python-through-fastcgi-for-ng
     apt-get install fcgiwrap nginx
 
 ### uWSGI
+
+
+
+## Add later
+Gzip responses.

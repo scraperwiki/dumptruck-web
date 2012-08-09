@@ -3,6 +3,7 @@ import demjson
 import unittest
 import dumptruck
 from dumptruck_web import dumptruck_web
+import example
 
 DB = 'dumptruck.db'
 
@@ -65,6 +66,35 @@ class TestFileness(unittest.TestCase):
 #   test_private_db(self):
 #       observedCode, observedData = dumptruck_web({u'q': u''}, DB)
 #       self.assertEqual(observedCode, 401)
+
+
+class TestCgi(SqliteApi):
+    def test_cgi(self):
+        'CGI should work.'
+        self.dt.insert({u'name': u'Aidan', u'favorite_color': u'Green'}, 'person')
+        os.environ['QUERY_STRING'] = 'q=SELECT+favorite_color+FROM+person'
+        observed = example.main().split('\n')
+        expected = [
+            'HTTP/1.1 200 OK',
+            'Content-Type: application/json; charset=utf-8',
+            '',
+            '[{"favorite_color":"Green"}]',
+            '',
+        ]
+        self.assertEqual(observed, expected)
+
+    def test_http(self):
+        'Example script should return these HTTP headers.'
+        os.environ['QUERY_STRING'] = 'q=SELECT+*+FROM+sqlite_master+LIMIT+0'
+        observed = example.main().split('\n')
+        expected = [
+            'HTTP/1.1 200 OK',
+            'Content-Type: application/json; charset=utf-8',
+            '',
+            '[]',
+            '',
+        ]
+        self.assertListEqual(observed, expected)
 
 if __name__ == '__main__':
     unittest.main()

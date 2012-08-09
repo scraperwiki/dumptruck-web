@@ -54,8 +54,10 @@ def dumptruck_web(query, dbname):
 
     return code, demjson.encode(data)
 
-
+HEADERS = '''HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8'''
 def sqlite_api(dbname):
     form = cgi.FieldStorage()
     qs = {name: form[name].value for name in form.keys()}
-    dumptruck_web(qs, dbname)
+    code, body = dumptruck_web(qs, dbname)
+    return HEADERS + '\n\n' + body + '\n'
