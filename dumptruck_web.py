@@ -1,4 +1,5 @@
 import cgi
+import sqlite3
 import dumptruck
 import demjson
 
@@ -6,15 +7,16 @@ def dumptruck_web(query):
     dt = dumptruck.DumpTruck()
 
     if "q" not in query:
-        data = 'Error: No query specified'
+        data = u'Error: No query specified'
         code = 400
     else:
         sql = query['q']
 
         try:
             data = dt.execute(sql)
-        except:
-            raise
+        except sqlite3.OperationalError, e:
+            data = u'SQL error: ' + unicode(e)
+            code = 400
         else:
             code = 200
 

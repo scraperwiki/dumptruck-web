@@ -16,28 +16,30 @@ class SqliteApi(unittest.TestCase):
 
 class TestQueries(SqliteApi):
     def test_valid_query(self):
-        self.dt.insert({'name': 'Aidan', 'favorite_color': 'Green'}, 'person')
-        observedCode, observedData = dumptruck_web({'q': 'SELECT favorite_color FROM person'})
+        self.dt.insert({u'name': u'Aidan', u'favorite_color': u'Green'}, 'person')
+        observedCode, observedData = dumptruck_web({'q': u'SELECT favorite_color FROM person'})
 
-        self.assertListEqual(demjson.decode(observedData), [{"favorite_color":"Green"}])
+        self.assertListEqual(demjson.decode(observedData), [{u"favorite_color": u"Green"}])
         self.assertEqual(observedCode, 200)
 
     def test_invalid_query(self):
-        observedCode, observedData = dumptruck_web({'q': 'chainsaw'})
+        observedCode, observedData = dumptruck_web({u'q': u'chainsaw'})
 
-        self.assertEqual(observedData, 'SQL error: near "chainsaw": syntax error')
+        self.assertEqual(demjson.decode(observedData), u'SQL error: near "chainsaw": syntax error')
         self.assertEqual(observedCode, 400)
 
     def test_destructive_query(self):
-        observedCode, observedData = dumptruck_web({'q': 'DROP TABLE sqlite_master;'})
+        self.dt.execute('CREATE TABLE important(foo);')
+        observedCode, observedData = dumptruck_web({'q': u'DROP TABLE important;'})
+        print observedData
 
-        self.assertEqual(observedData, 'Error: attempt to write a readonly database')
+        self.assertEqual(demjson.decode(observedData), u'Error: attempt to write a readonly database')
         self.assertEqual(observedCode, 403)
 
     def test_no_query(self):
         observedCode, observedData = dumptruck_web({})
 
-        self.assertEqual(observedData, 'Error: No query specified')
+        self.assertEqual(demjson.decode(observedData), u'Error: No query specified')
         self.assertEqual(observedCode, 400)
 
 class TestFileness(unittest.TestCase):
@@ -49,7 +51,7 @@ class TestFileness(unittest.TestCase):
 
     def test_query_nonexistant(self):
         "When we query a database file that doesn't exist"
-        observedCode, observedData = dumptruck_web({'q': 'SELECT 3 FROM sqlite_master'})
+        observedCode, observedData = dumptruck_web({'q': u'SELECT 3 FROM sqlite_master'})
 
         # File is not created
         self.assertFalse(os.path.isfile(DB))
@@ -62,7 +64,7 @@ class TestFileness(unittest.TestCase):
         
 
 #   test_private_db(self):
-#       observedCode, observedData = dumptruck_web({'q': ''})
+#       observedCode, observedData = dumptruck_web({u'q': u''})
 #       self.assertEqual(observedCode, 401)
 
 if __name__ == '__main__':
