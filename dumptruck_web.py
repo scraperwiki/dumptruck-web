@@ -22,7 +22,7 @@ def authorizer_readonly(action_code, tname, cname, sql_location, trigger):
 
 def dumptruck_web(query):
     dt = dumptruck.DumpTruck()
-    dt.set_authorizer(authorizer_readonly)
+    dt.connection.set_authorizer(authorizer_readonly)
 
     if "q" not in query:
         data = u'Error: No query specified'
