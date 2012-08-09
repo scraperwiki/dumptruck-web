@@ -5,8 +5,8 @@ import dumptruck
 from dumptruck_web import dumptruck_web
 import example
 
-DB = os.path.expanduser('~/dumptruck.db')
-
+# DB = os.path.expanduser('~/dumptruck.db')
+DB = 'dumptruck.db'
 class SqliteApi(unittest.TestCase):
     def setUp(self):
         try:
@@ -14,8 +14,8 @@ class SqliteApi(unittest.TestCase):
         except OSError:
             pass
 
-        f = open(os.path.expanduser('~/sw.json'), 'w')
-        f.write(demjson.encode({'database': DB}))
+#       f = open(os.path.expanduser('~/sw.json'), 'w')
+#       f.write(demjson.encode({'database': DB}))
         self.dt = dumptruck.DumpTruck(dbname=DB)
 
 class TestQueries(SqliteApi):
