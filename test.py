@@ -96,5 +96,45 @@ class TestCgi(SqliteApi):
         ]
         self.assertListEqual(observed, expected)
 
+class TestScraperwikiJson(unittest.TestCase):
+
+    def _q(self, dbname, how_many, check_inness = True):
+        "For testing sw.json database file configuration"
+        dbname = os.path.expanduser(dbname)
+        dt = dumptruck.DumpTruck(dbname)
+        dt.drop('bacon', if_exists = True)
+        dt.insert({'how_many': how_many}, 'bacon')
+        os.environ['QUERY_STRING']='q=SELECT+how_many+FROM+bacon'
+        http = example.main()
+
+        if check_inness:
+            self.assertIn(unicode(how_many), http)
+
+        os.remove(dbname)
+
+    def test_dumptruck(self):
+        os.system('cp fixtures/sw.json.dumptruck.db ~/sw.json')
+        self._q('dumptruck.db', 2124)
+
+    def test_home_dumptruck(self):
+        os.system('cp fixtures/sw.json.home-dumptruck.db ~/sw.json')
+        self._q('~/dumptruck.db', 3824)
+
+    def test_scraperwiki(self):
+        os.system('cp fixtures/sw.json.scraperwiki.sqlite ~/sw.json')
+        self._q('scraperwiki.sqlite', 9804)
+
+    def test_blank(self):
+        "It should raise an error if \"database\" is not specified in the sw.json"
+        os.system('cp fixtures/sw.json.blank ~/sw.json')
+        with self.assertRaises(Exception):
+            self._q(example.main(), 312123, check_inness = False)
+        
+    def test_no_sw_json(self):
+        "It should raise an error if there is no sw.json"
+        os.system('rm -f ~/sw.json')
+        with self.assertRaises(Exception):
+            self._q(example.main(), 2938, check_inness = False)
+
 if __name__ == '__main__':
     unittest.main()
