@@ -2,7 +2,7 @@ import unittest
 import dumptruck
 import dumptruck_web
 
-class SqiteApi(unittest.TestCase):
+class SqliteApi(unittest.TestCase):
     def setUp(self):
         try:
             os.remove('dumptruck.db')
@@ -17,6 +17,22 @@ class TestQueries(SqliteApi):
 
         self.assertListEqual(json.loads(observedData), [{"name":"Aidan","color":"Green"}])
         self.assertEqual(observedCode, 200)
+
+    test_invalid_query(self):
+        observedCode, observedData = dumptruck_web('?q=chainsaw')
+
+        self.assertEqual(observedData, 'SQL error: near "chainsaw": syntax error')
+        self.assertEqual(observedCode, 400)
+
+    test_destructive_query(self):
+        observedCode, observedData = dumptruck_web('?q=DROP+TABLE+sqlite_master;')
+
+        self.assertEqual(observedData, 'SQL error: near "chainsaw": syntax error')
+        self.assertEqual(observedCode, 403)
+
+#   test_private_db(self):
+#       observedCode, observedData = dumptruck_web('?q=')
+#       self.assertEqual(observedCode, 401)
 
 if __name__ == '__main__':
     unittest.main()
