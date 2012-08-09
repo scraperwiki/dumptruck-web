@@ -31,9 +31,8 @@ class TestQueries(SqliteApi):
     def test_destructive_query(self):
         self.dt.execute('CREATE TABLE important(foo);')
         observedCode, observedData = dumptruck_web({'q': u'DROP TABLE important;'})
-        print observedData
 
-        self.assertEqual(demjson.decode(observedData), u'Error: attempt to write a readonly database')
+        self.assertEqual(demjson.decode(observedData), u'Error: Not authorized')
         self.assertEqual(observedCode, 403)
 
     def test_no_query(self):
@@ -57,7 +56,7 @@ class TestFileness(unittest.TestCase):
         self.assertFalse(os.path.isfile(DB))
 
         # Empty list is returned
-        self.assertListEqual(json.loads(observedData), [])
+        self.assertListEqual(demjson.decode(observedData), [])
 
         # All is well.
         self.assertEqual(observedCode, 200)
