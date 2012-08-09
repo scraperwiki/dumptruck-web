@@ -5,18 +5,18 @@ import demjson
 def dumptruck_web(query):
     dt = dumptruck.DumpTruck()
 
-    if "q" in query:
-        sql = query['q']
-    else:
+    if "q" not in query:
         data = 'Error: No query specified'
         code = 400
-
-    try:
-        data = dt.execute(sql)
-    except:
-        raise
     else:
-        code = 200
+        sql = query['q']
+
+        try:
+            data = dt.execute(sql)
+        except:
+            raise
+        else:
+            code = 200
 
     return code, demjson.encode(data)
 

@@ -1,4 +1,5 @@
 import os
+import demjson
 import unittest
 import dumptruck
 from dumptruck_web import dumptruck_web
@@ -15,10 +16,10 @@ class SqliteApi(unittest.TestCase):
 
 class TestQueries(SqliteApi):
     def test_valid_query(self):
-        self.dt.insert({'name': 'Aidan', 'color': 'Green'}, 'person')
+        self.dt.insert({'name': 'Aidan', 'favorite_color': 'Green'}, 'person')
         observedCode, observedData = dumptruck_web({'q': 'SELECT favorite_color FROM person'})
 
-        self.assertListEqual(json.loads(observedData), [{"name":"Aidan","color":"Green"}])
+        self.assertListEqual(demjson.decode(observedData), [{"favorite_color":"Green"}])
         self.assertEqual(observedCode, 200)
 
     def test_invalid_query(self):
