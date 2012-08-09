@@ -1,16 +1,18 @@
+import cgi
 import dumptruck
 import demjson
 
-def dumptruck_web(querystring):
+def dumptruck_web(query):
     dt = dumptruck.DumpTruck()
 
-    # http://docs.python.org/library/cgi.html
-    form = cgi.FieldStorage()
-    if "q" not in form:
-        print 'Error: No query specified'
+    if "q" in query:
+        sql = query['q']
+    else:
+        data = 'Error: No query specified'
+        code = 400
 
     try:
-        data = dt.execute(form['q'])
+        data = dt.execute(sql)
     except:
         raise
     else:
@@ -19,7 +21,11 @@ def dumptruck_web(querystring):
     return code, demjson.encode(data)
 
 
-
 if __name__ == "__main__":
     
-    dumptruck_web(querystring)
+    # http://docs.python.org/library/cgi.html
+
+    form = cgi.FieldStorage()
+    qs = {name: form[name].value for name in form.keys()}
+
+    dumptruck_web(qs)
