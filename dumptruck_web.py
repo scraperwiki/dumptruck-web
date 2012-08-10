@@ -5,16 +5,32 @@ import dumptruck
 import demjson
 
 def authorizer_readonly(action_code, tname, cname, sql_location, trigger):
-    readonlyops = [ sqlite3.SQLITE_SELECT, sqlite3.SQLITE_READ, sqlite3.SQLITE_DETACH, 31 ]  # 31=SQLITE_FUNCTION missing from library.  codes: http://www.sqlite.org/c3ref/c_alter_table.html
+    readonlyops = [
+        sqlite3.SQLITE_SELECT,
+        sqlite3.SQLITE_READ,
+        sqlite3.SQLITE_DETACH,
+
+        # 31=SQLITE_FUNCTION missing from library.
+        # codes: http://www.sqlite.org/c3ref/c_alter_table.html
+        31,
+    ]
     if action_code in readonlyops:
         return sqlite3.SQLITE_OK
 
     if action_code == sqlite3.SQLITE_PRAGMA:
-        if tname in ["table_info", "index_list", "index_info", "page_size", "synchronous"]:
+        tnames_ok = {
+            "table_info",
+            "index_list",
+            "index_info",
+            "page_size",
+            "synchronous"
+        }
+        if tname in tnames_ok:
             return sqlite3.SQLITE_OK
 
-    # SQLite FTS (full text search) requires this permission even when reading, and
-    # this doesn't let ordinary queries alter sqlite_master because of PRAGMA writable_schema
+    # SQLite FTS (full text search) requires this permission even when reading,
+    # and this doesn't let ordinary queries alter sqlite_master because of
+    # PRAGMA writable_schema
     if action_code == sqlite3.SQLITE_UPDATE and tname == "sqlite_master":
         return sqlite3.SQLITE_OK
 
