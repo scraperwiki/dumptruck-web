@@ -85,6 +85,12 @@ def sqlite_api(dbname):
     """
     This CGI function takes the $QUERY_STRING and database name as input, so
     you can create a SQLite HTTP API by importing and calling this function.
+
+    It takes a query string like
+
+        q=SELECT+foo+FROM+bar
+
+    Currently, q the only parameter.
     """
     form = cgi.FieldStorage()
     qs = {name: form[name].value for name in form.keys()}
