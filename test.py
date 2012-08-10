@@ -72,6 +72,7 @@ class TestFileness(unittest.TestCase):
 class TestCgi(SqliteApi):
     def test_cgi(self):
         'CGI should work.'
+        os.system('cp fixtures/sw.json.dumptruck.db ~/sw.json')
         self.dt.insert({u'name': u'Aidan', u'favorite_color': u'Green'}, 'person')
         os.environ['QUERY_STRING'] = 'q=SELECT+favorite_color+FROM+person'
         observed = example.main().split('\n')
