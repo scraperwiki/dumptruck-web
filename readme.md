@@ -44,8 +44,9 @@ Then (re)start the daemons.
 If this doesn't work, read `/etc/init.d/fcgiwrap`.
 
 ### uWSGI
-Here's a configuration based on the
-[uWSGI quickstart]h(ttp://projects.unbit.it/uwsgi/wiki/Quickstart)
+Here's a configuration based on the [uWSGI quickstart](http://projects.unbit.it/uwsgi/wiki/Quickstart) 
+
+Also see [uWSGI on nginx page](http://projects.unbit.it/uwsgi/wiki/RunOnNginx)
 
 Install these.
 
