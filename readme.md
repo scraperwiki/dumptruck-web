@@ -45,7 +45,7 @@ If this doesn't work, read `/etc/init.d/fcgiwrap`.
 
 ### uWSGI
 Here's a configuration based on the
-[uWSGI quickstart]h(ttp://projects.unbit.it/uwsgi/wiki/Quickstart)
+[uWSGI quickstart](http://projects.unbit.it/uwsgi/wiki/Quickstart)
 
 Install these.
 
