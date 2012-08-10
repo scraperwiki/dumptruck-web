@@ -30,6 +30,12 @@ Configure the nginx site. (Try `/etc/nginx/sites-enabled/default`.)
 This depends on `/var/www/sqlite_api.py` being a cgi script file that www-data
 can execute.
 
+Specify some high number of processes in `/etc/init.d/fcgiwrap` like so.
+
+    FCGI_CHILDREN="9001"
+
+You could also try something less extreme.
+
 Then (re)start the daemons.
 
     service fcgiwrap restart
@@ -53,6 +59,8 @@ Run this (preferably as a daemon).
       --socket 127.0.0.1:3031 \
       --callable application \
       --processes 20
+
+Use some high number of processes because they block.
 
 We'll have to adjust the api script so that it works with uWSGI;
 `sqlite_api.py` is that.
