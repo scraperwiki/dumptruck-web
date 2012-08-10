@@ -14,8 +14,6 @@ class SqliteApi(unittest.TestCase):
         except OSError:
             pass
 
-#       f = open(os.path.expanduser('~/sw.json'), 'w')
-#       f.write(demjson.encode({'database': DB}))
         self.dt = dumptruck.DumpTruck(dbname=DB)
 
 class TestQueries(SqliteApi):

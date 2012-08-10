@@ -5,7 +5,7 @@ def main():
     # Settings
     import demjson
     sw_json = open(os.path.expanduser('~/sw.json')).read()
-    db = demjson.decode(sw_json)['database']
+    db = os.path.expanduser(demjson.decode(sw_json)['database'])
 
     return sqlite_api(db)
 
