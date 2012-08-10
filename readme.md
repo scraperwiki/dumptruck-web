@@ -19,7 +19,7 @@ Install.
 
     apt-get install fcgiwrap nginx
 
-Configure the nginx site.
+Configure the nginx site. (Try `/etc/nginx/sites-enabled/default`.)
                                                   
     location / {                                               
         fastcgi_param DOCUMENT_ROOT /var/www/;
@@ -34,6 +34,8 @@ Then (re)start the daemons.
 
     service fcgiwrap restart
     service nginx restart
+
+If this doesn't work, read `/etc/init.d/fcgiwrap`.
 
 ### uWSGI
 Here's a configuration based on the
@@ -55,7 +57,7 @@ Run this (preferably as a daemon).
 We'll have to adjust the api script so that it works with uWSGI;
 `sqlite_api.py` is that.
 
-Add this to the nginx site. (Try /etc/nginx/sites-enabled/default)
+Add this to the nginx site. (Try `/etc/nginx/sites-enabled/default`.)
 
     location /path/to/sqlite {
         include uwsgi_params;
