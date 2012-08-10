@@ -5,6 +5,7 @@ import dumptruck
 import demjson
 
 def authorizer_readonly(action_code, tname, cname, sql_location, trigger):
+    "SQLite authorize to prohibit destructive SQL commands"
     readonlyops = [
         sqlite3.SQLITE_SELECT,
         sqlite3.SQLITE_READ,
@@ -37,6 +38,10 @@ def authorizer_readonly(action_code, tname, cname, sql_location, trigger):
     return sqlite3.SQLITE_DENY
 
 def dumptruck_web(query, dbname):
+    """
+    Given an SQL query and a SQLitedatabase name, return an HTTP status code
+    and the JSON-encoded response from the database.
+    """
     if os.path.isfile(dbname):
         # Check for the database file
         dt = dumptruck.DumpTruck(dbname)
@@ -50,21 +55,25 @@ def dumptruck_web(query, dbname):
     if "q" not in query:
         data = u'Error: No query specified'
         code = 400
+
     else:
         sql = query['q']
 
         try:
             data = dt.execute(sql)
+
         except sqlite3.OperationalError, e:
-            data = u'SQL error: ' + unicode(e)
+            data = u'SQL error: ' + e.message
             code = 400
+
         except sqlite3.DatabaseError, e:
             if e.message == u"not authorized":
                 data = u'Error: Not authorized'
                 code = 403
             else:
-                data = u'Database error: ' + unicode(e)
+                data = u'Database error: ' + e.message
                 code = 400
+
         else:
             code = 200
 
@@ -73,6 +82,10 @@ def dumptruck_web(query, dbname):
 HEADERS = '''HTTP/1.1 200 OK
 Content-Type: application/json; charset=utf-8'''
 def sqlite_api(dbname):
+    """
+    This CGI function takes the $QUERY_STRING and database name as input, so
+    you can create a SQLite HTTP API by importing and calling this function.
+    """
     form = cgi.FieldStorage()
     qs = {name: form[name].value for name in form.keys()}
     code, body = dumptruck_web(qs, dbname)
