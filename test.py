@@ -150,10 +150,10 @@ class TestExample(unittest.TestCase):
         You must specify the box, and that gets expanded to a path to the appropriate file.
 
         You specify it like this.
-        https://box.scraperwiki.com/knight-box/sqlite?q=SELECT+foo+FROM+baz
+        /knight-box/sqlite?q=SELECT+foo+FROM+baz
 
         We could rewrite this to
-        https://box.scraperwiki.com/sqlite?q=SELECT+foo+FROM+baz&box=knight-box
+        /sqlite?q=SELECT+foo+FROM+baz&box=knight-box
 
         or do regex matches on the url. The box name gets turned into
 

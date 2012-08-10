@@ -1,14 +1,6 @@
 Foo bar
 ==============
 
-
-
-
-
-
-
-
-
 ## Running on Nginx
 
 ### CGI
@@ -43,9 +35,23 @@ Then (re)start the daemons.
 
 If this doesn't work, read `/etc/init.d/fcgiwrap`.
 
+An example (simple) script would be
+
+    #!/usr/bin/env python
+    
+    print '''HTTP/1.1 200
+    Content-Type: text/plain
+    
+    Hello world
+    '''
+
 ### uWSGI
 Here's a configuration based on the
-[uWSGI quickstart](http://projects.unbit.it/uwsgi/wiki/Quickstart)
+[uWSGI quickstart](http://projects.unbit.it/uwsgi/wiki/Quickstart) 
+
+Also see [uWSGI on nginx page](http://projects.unbit.it/uwsgi/wiki/RunOnNginx),
+for reference but note that this explains a configuration that may be
+unnecessarily complicated.
 
 Install these.
 
@@ -79,6 +85,12 @@ Restart nginx.
 Test
 
     curl localhost/path/to/sqlite?q=SELECT+42+FROM+sqlite_master
+
+An example (simple) script would be
+
+    def application(env, start_response):
+        start_response('200 OK', [('Content-Type','text/html')])
+        return "Hello World"
 
 ## Add later
 Gzip responses.
