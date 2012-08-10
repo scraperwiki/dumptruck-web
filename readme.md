@@ -12,12 +12,28 @@ Foo bar
 ## Running on Nginx
 
 ### CGI
-http://nginx.localdomain.pl/wiki/FcgiWrap
-http://wiki.codemongers.com/NginxFcgiExample
-https://wiki.archlinux.org/index.php/Nginx#CGI_implementation
-http://stackoverflow.com/questions/7048057/running-python-through-fastcgi-for-nginx
+Here's an Nginx FastCGI configuration for Ubuntu based on the
+[Arch Linux Wiki](https://wiki.archlinux.org/index.php/Nginx#FastCGI).
+
+Install.
 
     apt-get install fcgiwrap nginx
+
+Configure the nginx site.
+                                                  
+    location / {                                               
+        fastcgi_param DOCUMENT_ROOT /var/www/;
+        fastcgi_param SCRIPT_NAME sqlite_api.py;
+        fastcgi_pass unix:/var/run/fcgiwrap.socket;
+    }
+
+This depends on `/var/www/sqlite_api.py` being a cgi script file that www-data
+can execute.
+
+Then (re)start the daemons.
+
+    service fcgiwrap restart
+    service nginx restart
 
 ### uWSGI
 Here's a configuration based on the
