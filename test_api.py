@@ -75,7 +75,6 @@ class TestAPI(unittest.TestCase):
         By default, check whether how_many is in the output.
         Set check_inness to False to avoid this. Set it to something else to check that."""
         dbname = os.path.join(JACK, os.path.expanduser(dbname))
-        print dbname
         dt = dumptruck.DumpTruck(dbname)
         dt.drop('bacon', if_exists = True)
         dt.insert({'how_many': how_many}, 'bacon')

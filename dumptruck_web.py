@@ -124,7 +124,7 @@ def api(boxhome = os.path.join('/', 'home'), database_call = database):
             body = 'Malformed sw.json file'
 
     try:
-        dbname = os.path.expanduser(sw_data['database'])
+        dbname = os.path.join(boxhome, qs['box'], os.path.expanduser(sw_data['database']))
     except:
         if code == None:
             code = 500
