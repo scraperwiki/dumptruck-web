@@ -93,6 +93,10 @@ class TestAPI(unittest.TestCase):
         if check_code != None:
             self.assertIn(unicode(check_code), http.split('\n')[0])
 
+        # The body should be valid JSON
+        body = '\n\n'.join(http.split('\n\n')[1:])
+        json.loads(body)
+
         os.remove(dbname)
 
     def test_dumptruck(self):
