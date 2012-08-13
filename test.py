@@ -137,7 +137,6 @@ class TestMain(unittest.TestCase):
         with self.assertRaises(Exception):
             self._q(example.main(), 2938, check_inness = False)
 
-class TestExample(unittest.TestCase):
     def test_permissions_error(self):
         '''
         If the database cannot be accessed because of a lack of permission,

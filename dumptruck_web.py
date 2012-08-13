@@ -17,7 +17,7 @@ CODE_MAP = {
     404: '404 Not Found',
 }
 
-def authorizer_readonly(action_code, tname, cname, sql_location, trigger):
+def _authorizer_readonly(action_code, tname, cname, sql_location, trigger):
     "SQLite authorize to prohibit destructive SQL commands"
     readonlyops = [
         sqlite3.SQLITE_SELECT,
@@ -50,7 +50,7 @@ def authorizer_readonly(action_code, tname, cname, sql_location, trigger):
 
     return sqlite3.SQLITE_DENY
 
-def dumptruck_web(query, dbname):
+def database(query, dbname):
     """
     Given an SQL query and a SQLite database name, return an HTTP status code
     and the JSON-encoded response from the database.
@@ -92,7 +92,7 @@ def dumptruck_web(query, dbname):
 
     return code, json.dumps(data)
 
-def main():
+def api():
     """
     It takes a query string like
 
@@ -119,4 +119,4 @@ def main():
     return headers + '\n\n' + body + '\n'
 
 if __name__ == '__main__':
-    main()
+    api()
