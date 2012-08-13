@@ -79,8 +79,18 @@ def dumptruck_web(query, dbname):
 
     return code, json.dumps(data)
 
-HEADERS = '''HTTP/1.1 200 OK
+HEADERS = '''HTTP/1.1 %s
 Content-Type: application/json; charset=utf-8'''
+CODE_MAP = {
+    200: '200 OK',
+    301: '301 Moved permanently',
+    302: '302 Found',
+    303: '303 See Other',
+    400: '400 Bad Request',
+    401: '401 Unauthorized',
+    403: '403 Forbidden',
+    404: '404 Not Found',
+}
 def sqlite_api(dbname):
     """
     This CGI function takes the $QUERY_STRING and database name as input, so
@@ -95,4 +105,27 @@ def sqlite_api(dbname):
     form = cgi.FieldStorage()
     qs = {name: form[name].value for name in form.keys()}
     code, body = dumptruck_web(qs, dbname)
-    return HEADERS + '\n\n' + body + '\n'
+    headers = HEADERS % CODE_MAP[code]
+    return headers + '\n\n' + body + '\n'
+
+def main():
+    form = cgi.FieldStorage()
+    qs = {name: form[name].value for name in form.keys()}
+    # Use the database file specified by the "database" field in ~/sw.json
+
+    path = os.path.expanduser(os.path.join('/', 'home', qs['boxname'], 'sw.json'))
+    try:
+        sw_json = open(path).read()
+    except IOError:
+      
+    try:
+        dbname = os.path.expanduser(json.loads(sw_json)['database'])
+    except:
+        
+    # Run the query
+    code, body = dumptruck_web(qs, dbname)
+    headers = HEADERS % CODE_MAP[code]
+    return headers + '\n\n' + body + '\n'
+
+if __name__ == '__main__':
+    main()

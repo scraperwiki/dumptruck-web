@@ -98,7 +98,7 @@ class TestCgi(SqliteApi):
         ]
         self.assertListEqual(observed, expected)
 
-class TestExampleScraperwikiJson(unittest.TestCase):
+class TestMain(unittest.TestCase):
     def _q(self, dbname, how_many, check_inness = True):
         "For testing sw.json database file configuration"
         dbname = os.path.expanduser(dbname)
