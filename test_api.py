@@ -4,7 +4,14 @@ import unittest
 import dumptruck
 from dumptruck_web import api
 
-DB = 'dumptruck.db'
+BOXHOME = os.path.join('/', 'tmp', 'boxtests') 
+JACK = os.path.join(BOXHOME, 'jack-in-a')
+DB = os.path.join(JACK, 'dumptruck.db')
+SW_JSON = os.path.join(JACK, 'sw.json')
+
+def api_test():
+    return api(boxhome = BOXHOME)
+
 class TestCgi(unittest.TestCase):
     def setUp(self):
         try:
@@ -12,21 +19,25 @@ class TestCgi(unittest.TestCase):
         except OSError:
             pass
 
+        if not os.path.isdir(JACK):
+            os.makedirs(JACK)
+
         self.dt = dumptruck.DumpTruck(dbname=DB)
 
     def test_cgi_400(self):
         'CGI should work.'
-        os.environ['QUERY_STRING'] = 'qqqq=SELECT+favorite_color+FROM+person&box=cardboard'
-        observed = api().split('\n')[0]
+        os.environ['QUERY_STRING'] = 'qqqq=SELECT+favorite_color+FROM+person&box=jack-in-a'
+        observed = api_test().split('\n')[0]
         expected = 'HTTP/1.1 400 Bad Request'
         self.assertEqual(observed, expected)
 
     def test_cgi_200(self):
         'CGI should work.'
-        os.system('cp fixtures/sw.json.dumptruck.db ~/sw.json')
+        os.system('cp fixtures/sw.json.dumptruck.db ' + SW_JSON)
         self.dt.insert({u'name': u'Aidan', u'favorite_color': u'Green'}, 'person')
-        os.environ['QUERY_STRING'] = 'q=SELECT+favorite_color+FROM+person&box=cat-in-a'
-        observed = api().split('\n')
+        os.environ['QUERY_STRING'] = 'q=SELECT+favorite_color+FROM+person&box=jack-in-a'
+        # observed = api_test(database_call = lambda q, d: (200, '[]').split('\n')
+        observed = api_test().split('\n')
         expected = [
             'HTTP/1.1 200 OK',
             'Content-Type: application/json; charset=utf-8',
@@ -38,8 +49,8 @@ class TestCgi(unittest.TestCase):
 
     def test_http(self):
         'Example script should return these HTTP headers.'
-        os.environ['QUERY_STRING'] = 'q=SELECT+*+FROM+sqlite_master+LIMIT+0&box=lock'
-        observed = api().split('\n')
+        os.environ['QUERY_STRING'] = 'q=SELECT+*+FROM+sqlite_master+LIMIT+0&box=jack-in-a'
+        observed = api_test().split('\n')
         expected = [
             'HTTP/1.1 200 OK',
             'Content-Type: application/json; charset=utf-8',
@@ -59,7 +70,7 @@ class TestAPI(unittest.TestCase):
         dt.drop('bacon', if_exists = True)
         dt.insert({'how_many': how_many}, 'bacon')
         os.environ['QUERY_STRING']='q=SELECT+how_many+FROM+bacon&box=jack-in-a'
-        http = api()
+        http = api_test()
 
         if check_inness == True:
             check_inness = how_many
@@ -72,31 +83,31 @@ class TestAPI(unittest.TestCase):
         os.remove(dbname)
 
     def test_dumptruck(self):
-        os.system('cp fixtures/sw.json.dumptruck.db ~/sw.json')
+        os.system('cp fixtures/sw.json.dumptruck.db ' + SW_JSON)
         self._q('dumptruck.db', 2124)
 
     def test_home_dumptruck(self):
-        os.system('cp fixtures/sw.json.home-dumptruck.db ~/sw.json')
+        os.system('cp fixtures/sw.json.home-dumptruck.db ' + SW_JSON)
         self._q('~/dumptruck.db', 3824)
 
     def test_scraperwiki(self):
-        os.system('cp fixtures/sw.json.scraperwiki.sqlite ~/sw.json')
+        os.system('cp fixtures/sw.json.scraperwiki.sqlite ' + SW_JSON)
         self._q('scraperwiki.sqlite', 9804)
         
     def test_no_sw_json(self):
         "It should raise an error if there is no sw.json"
-        os.system('rm -f ~/sw.json')
-        self._q(api(), 2938, check_inness = 'no sw.json')
+        os.system('rm -f ' + SW_JSON)
+        self._q(api_test(), 2938, check_inness = 'no sw.json')
 
     def test_malformed_json(self):
         "It should raise an error if there is a malformed sw.json"
-        os.system("echo '{{{{{' >> ~/sw.json")
-        self._q(api(), 293898879, check_inness = 'malformed sw.json')
+        os.system("echo '{{{{{' >> " + SW_JSON)
+        self._q(api_test(), 293898879, check_inness = 'malformed sw.json')
 
     def test_no_database_attribute(self):
         "It should raise an error if there is a well-formed sw.json with no database attribute."
-        os.system("echo '{}' > ~/sw.json")
-        self._q(api(), 29379, check_inness = 'malformed sw.json')
+        os.system("echo '{}' > " + SW_JSON)
+        self._q(api_test(), 29379, check_inness = 'malformed sw.json')
 
     def test_permissions_error(self):
         '''

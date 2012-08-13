@@ -92,7 +92,7 @@ def database(query, dbname):
 
     return code, json.dumps(data)
 
-def api():
+def api(boxhome = os.path.join('/', 'home'), database_call = database):
     """
     It takes a query string like
 
@@ -104,19 +104,24 @@ def api():
     qs = {name: form[name].value for name in form.keys()}
     # Use the database file specified by the "database" field in ~/sw.json
 
-    path = os.path.expanduser(os.path.join('/', 'home', qs['box'], 'sw.json'))
+    path = os.path.join(boxhome, qs['box'], 'sw.json')
     try:
         sw_json = open(path).read()
     except IOError:
         raise 
 
     try:
-        dbname = os.path.expanduser(json.loads(sw_json)['database'])
+        sw_data = json.loads(sw_json)
+    except:
+        raise
+
+    try:
+        dbname = os.path.expanduser(sw_data['database'])
     except:
         raise
         
     # Run the query
-    code, body = dumptruck_web(qs, dbname)
+    code, body = database_call(qs, dbname)
     headers = HEADERS % CODE_MAP[code]
     return headers + '\n\n' + body + '\n'
 
