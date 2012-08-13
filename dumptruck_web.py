@@ -4,6 +4,19 @@ import sqlite3
 import dumptruck
 import json
 
+HEADERS = '''HTTP/1.1 %s
+Content-Type: application/json; charset=utf-8'''
+CODE_MAP = {
+    200: '200 OK',
+    301: '301 Moved permanently',
+    302: '302 Found',
+    303: '303 See Other',
+    400: '400 Bad Request',
+    401: '401 Unauthorized',
+    403: '403 Forbidden',
+    404: '404 Not Found',
+}
+
 def authorizer_readonly(action_code, tname, cname, sql_location, trigger):
     "SQLite authorize to prohibit destructive SQL commands"
     readonlyops = [
@@ -39,7 +52,7 @@ def authorizer_readonly(action_code, tname, cname, sql_location, trigger):
 
 def dumptruck_web(query, dbname):
     """
-    Given an SQL query and a SQLitedatabase name, return an HTTP status code
+    Given an SQL query and a SQLite database name, return an HTTP status code
     and the JSON-encoded response from the database.
     """
     if os.path.isfile(dbname):
@@ -79,36 +92,14 @@ def dumptruck_web(query, dbname):
 
     return code, json.dumps(data)
 
-HEADERS = '''HTTP/1.1 %s
-Content-Type: application/json; charset=utf-8'''
-CODE_MAP = {
-    200: '200 OK',
-    301: '301 Moved permanently',
-    302: '302 Found',
-    303: '303 See Other',
-    400: '400 Bad Request',
-    401: '401 Unauthorized',
-    403: '403 Forbidden',
-    404: '404 Not Found',
-}
-def sqlite_api(dbname):
+def main():
     """
-    This CGI function takes the $QUERY_STRING and database name as input, so
-    you can create a SQLite HTTP API by importing and calling this function.
-
     It takes a query string like
 
-        q=SELECT+foo+FROM+bar
+        q=SELECT+foo+FROM+bar&boxname=screwdriver
 
-    Currently, q the only parameter.
+    Currently, q and boxname are the only parameters.
     """
-    form = cgi.FieldStorage()
-    qs = {name: form[name].value for name in form.keys()}
-    code, body = dumptruck_web(qs, dbname)
-    headers = HEADERS % CODE_MAP[code]
-    return headers + '\n\n' + body + '\n'
-
-def main():
     form = cgi.FieldStorage()
     qs = {name: form[name].value for name in form.keys()}
     # Use the database file specified by the "database" field in ~/sw.json
