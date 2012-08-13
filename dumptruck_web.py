@@ -15,6 +15,7 @@ CODE_MAP = {
     401: '401 Unauthorized',
     403: '403 Forbidden',
     404: '404 Not Found',
+    500: '500 ',
 }
 
 def _authorizer_readonly(action_code, tname, cname, sql_location, trigger):
@@ -104,24 +105,30 @@ def api(boxhome = os.path.join('/', 'home'), database_call = database):
     qs = {name: form[name].value for name in form.keys()}
     # Use the database file specified by the "database" field in ~/sw.json
 
+    code = None
     path = os.path.join(boxhome, qs['box'], 'sw.json')
     try:
         sw_json = open(path).read()
     except IOError:
-        raise 
+        code = 500
+        body = 'No sw.json file'
 
     try:
         sw_data = json.loads(sw_json)
     except:
-        raise
+        code = 500
+        body = 'Malformed sw.json file'
 
     try:
         dbname = os.path.expanduser(sw_data['database'])
     except:
-        raise
+        code = 500
+        body = 'No "database" attribute in sw.json'
         
     # Run the query
-    code, body = database_call(qs, dbname)
+    if code == None:
+        code, body = database_call(qs, dbname)
+
     headers = HEADERS % CODE_MAP[code]
     return headers + '\n\n' + body + '\n'
 

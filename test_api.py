@@ -6,6 +6,7 @@ from dumptruck_web import api
 
 BOXHOME = os.path.join('/', 'tmp', 'boxtests') 
 JACK = os.path.join(BOXHOME, 'jack-in-a')
+os.environ['HOME'] = JACK
 DB = os.path.join(JACK, 'dumptruck.db')
 SW_JSON = os.path.join(JACK, 'sw.json')
 
@@ -69,11 +70,12 @@ class TestCGI(unittest.TestCase):
         self.assertListEqual(observed, expected)
 
 class TestAPI(unittest.TestCase):
-    def _q(self, dbname, how_many, check_inness = True):
+    def _q(self, dbname, how_many, check_inness = True, check_code = None):
         """For testing sw.json database file configuration
         By default, check whether how_many is in the output.
         Set check_inness to False to avoid this. Set it to something else to check that."""
-        dbname = os.path.expanduser(dbname)
+        dbname = os.path.join(JACK, os.path.expanduser(dbname))
+        print dbname
         dt = dumptruck.DumpTruck(dbname)
         dt.drop('bacon', if_exists = True)
         dt.insert({'how_many': how_many}, 'bacon')
@@ -87,6 +89,9 @@ class TestAPI(unittest.TestCase):
 
         if check_inness != None:
             self.assertIn(unicode(check_inness), http)
+
+        if check_code != None:
+            self.assertIn(unicode(check_code), http.split('\n')[0])
 
         os.remove(dbname)
 
@@ -105,7 +110,7 @@ class TestAPI(unittest.TestCase):
     def test_no_sw_json(self):
         "It should raise an error if there is no sw.json"
         os.system('rm -f ' + SW_JSON)
-        self._q(api_test(), 2938, check_inness = 'no sw.json')
+        self._q(api_test(), 2938, check_inness = 'no sw.json', check_code = 500)
 
     def test_malformed_json(self):
         "It should raise an error if there is a malformed sw.json"
