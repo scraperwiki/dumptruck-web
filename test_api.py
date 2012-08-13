@@ -9,10 +9,12 @@ JACK = os.path.join(BOXHOME, 'jack-in-a')
 DB = os.path.join(JACK, 'dumptruck.db')
 SW_JSON = os.path.join(JACK, 'sw.json')
 
-def api_test():
-    return api(boxhome = BOXHOME)
+def api_test(*args, **kwargs):
+    if 'boxhome' not in kwargs:
+        kwargs['boxhome'] = BOXHOME
+    return api(*args, **kwargs)
 
-class TestCgi(unittest.TestCase):
+class TestCGI(unittest.TestCase):
     def setUp(self):
         try:
             os.remove(DB)
@@ -24,7 +26,14 @@ class TestCgi(unittest.TestCase):
 
         self.dt = dumptruck.DumpTruck(dbname=DB)
 
-    def test_cgi_400(self):
+    def test_cgi_400_fake(self):
+        'CGI should work.'
+        os.environ['QUERY_STRING'] = 'qqqq=SELECT+favorite_color+FROM+person&box=jack-in-a'
+        observed = api_test(database_call = lambda q, d: (400, 'Blah blah blah')).split('\n')[0]
+        expected = 'HTTP/1.1 400 Bad Request'
+        self.assertEqual(observed, expected)
+
+    def test_cgi_400_real(self):
         'CGI should work.'
         os.environ['QUERY_STRING'] = 'qqqq=SELECT+favorite_color+FROM+person&box=jack-in-a'
         observed = api_test().split('\n')[0]
@@ -36,7 +45,6 @@ class TestCgi(unittest.TestCase):
         os.system('cp fixtures/sw.json.dumptruck.db ' + SW_JSON)
         self.dt.insert({u'name': u'Aidan', u'favorite_color': u'Green'}, 'person')
         os.environ['QUERY_STRING'] = 'q=SELECT+favorite_color+FROM+person&box=jack-in-a'
-        # observed = api_test(database_call = lambda q, d: (200, '[]').split('\n')
         observed = api_test().split('\n')
         expected = [
             'HTTP/1.1 200 OK',
