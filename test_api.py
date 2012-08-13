@@ -119,12 +119,12 @@ class TestAPI(unittest.TestCase):
     def test_malformed_json(self):
         "It should raise an error if there is a malformed sw.json"
         os.system("echo '{{{{{' >> " + SW_JSON)
-        self._q(':memory:', 293898879, check_inness = 'malformed sw.json')
+        self._q(':memory:', 293898879, check_inness = 'Malformed sw.json')
 
     def test_no_database_attribute(self):
         "It should raise an error if there is a well-formed sw.json with no database attribute."
         os.system("echo '{}' > " + SW_JSON)
-        self._q(':memory:', 29379, check_inness = 'malformed sw.json')
+        self._q(':memory:', 29379, check_inness = 'No \\"database\\" attribute')
 
     def test_permissions_error(self):
         '''
