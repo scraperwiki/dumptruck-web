@@ -4,13 +4,22 @@ import unittest
 import dumptruck
 from dumptruck_web import api
 
+DB = 'dumptruck.db'
 class TestCgi(SqliteApi):
+    def setUp(self):
+        try:
+            os.remove(DB)
+        except OSError:
+            pass
+
+        self.dt = dumptruck.DumpTruck(dbname=DB)
+
     def test_cgi(self):
         'CGI should work.'
         os.system('cp fixtures/sw.json.dumptruck.db ~/sw.json')
         self.dt.insert({u'name': u'Aidan', u'favorite_color': u'Green'}, 'person')
         os.environ['QUERY_STRING'] = 'q=SELECT+favorite_color+FROM+person'
-        observed = example.main().split('\n')
+        observed = api().split('\n')
         expected = [
             'HTTP/1.1 200 OK',
             'Content-Type: application/json; charset=utf-8',
@@ -23,7 +32,7 @@ class TestCgi(SqliteApi):
     def test_http(self):
         'Example script should return these HTTP headers.'
         os.environ['QUERY_STRING'] = 'q=SELECT+*+FROM+sqlite_master+LIMIT+0'
-        observed = example.main().split('\n')
+        observed = api().split('\n')
         expected = [
             'HTTP/1.1 200 OK',
             'Content-Type: application/json; charset=utf-8',
@@ -33,7 +42,7 @@ class TestCgi(SqliteApi):
         ]
         self.assertListEqual(observed, expected)
 
-class TestMain(unittest.TestCase):
+class TestAPI(unittest.TestCase):
     def _q(self, dbname, how_many, check_inness = True):
         "For testing sw.json database file configuration"
         dbname = os.path.expanduser(dbname)
@@ -41,7 +50,7 @@ class TestMain(unittest.TestCase):
         dt.drop('bacon', if_exists = True)
         dt.insert({'how_many': how_many}, 'bacon')
         os.environ['QUERY_STRING']='q=SELECT+how_many+FROM+bacon'
-        http = example.main()
+        http = api()
 
         if check_inness:
             self.assertIn(unicode(how_many), http)
@@ -64,13 +73,13 @@ class TestMain(unittest.TestCase):
         "It should raise an error if \"database\" is not specified in the sw.json"
         os.system('cp fixtures/sw.json.blank ~/sw.json')
         with self.assertRaises(Exception):
-            self._q(example.main(), 312123, check_inness = False)
+            self._q(api(), 312123, check_inness = False)
         
     def test_no_sw_json(self):
         "It should raise an error if there is no sw.json"
         os.system('rm -f ~/sw.json')
         with self.assertRaises(Exception):
-            self._q(example.main(), 2938, check_inness = False)
+            self._q(api(), 2938, check_inness = False)
 
     def test_permissions_error(self):
         '''
