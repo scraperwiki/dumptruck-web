@@ -2,7 +2,7 @@ import os
 import cgi
 import sqlite3
 import dumptruck
-import demjson
+import json
 
 def authorizer_readonly(action_code, tname, cname, sql_location, trigger):
     "SQLite authorize to prohibit destructive SQL commands"
@@ -77,7 +77,7 @@ def dumptruck_web(query, dbname):
         else:
             code = 200
 
-    return code, demjson.encode(data)
+    return code, json.dumps(data)
 
 HEADERS = '''HTTP/1.1 200 OK
 Content-Type: application/json; charset=utf-8'''

@@ -1,5 +1,5 @@
 import os
-import demjson
+import
 import unittest
 import dumptruck
 from dumptruck_web import dumptruck_web
@@ -21,26 +21,26 @@ class TestQueries(SqliteApi):
         self.dt.insert({u'name': u'Aidan', u'favorite_color': u'Green'}, 'person')
         observedCode, observedData = dumptruck_web({'q': u'SELECT favorite_color FROM person'}, DB)
 
-        self.assertListEqual(demjson.decode(observedData), [{u"favorite_color": u"Green"}])
+        self.assertListEqual(json.loads(observedData), [{u"favorite_color": u"Green"}])
         self.assertEqual(observedCode, 200)
 
     def test_invalid_query(self):
         observedCode, observedData = dumptruck_web({u'q': u'chainsaw'}, DB)
 
-        self.assertEqual(demjson.decode(observedData), u'SQL error: near "chainsaw": syntax error')
+        self.assertEqual(json.loads(observedData), u'SQL error: near "chainsaw": syntax error')
         self.assertEqual(observedCode, 400)
 
     def test_destructive_query(self):
         self.dt.execute('CREATE TABLE important(foo);')
         observedCode, observedData = dumptruck_web({'q': u'DROP TABLE important;'}, DB)
 
-        self.assertEqual(demjson.decode(observedData), u'Error: Not authorized')
+        self.assertEqual(json.loads(observedData), u'Error: Not authorized')
         self.assertEqual(observedCode, 403)
 
     def test_no_query(self):
         observedCode, observedData = dumptruck_web({}, DB)
 
-        self.assertEqual(demjson.decode(observedData), u'Error: No query specified')
+        self.assertEqual(json.loads(observedData), u'Error: No query specified')
         self.assertEqual(observedCode, 400)
 
 class TestFileness(unittest.TestCase):
@@ -58,7 +58,7 @@ class TestFileness(unittest.TestCase):
         self.assertFalse(os.path.isfile(DB))
 
         # Empty list is returned
-        self.assertListEqual(demjson.decode(observedData), [])
+        self.assertListEqual(json.loads(observedData), [])
 
         # All is well.
         self.assertEqual(observedCode, 200)
