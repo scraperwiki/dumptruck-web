@@ -63,7 +63,7 @@ def database(query, dbname):
         # Use a memory database if there is no dumptruck.db
         dt = dumptruck.DumpTruck(':memory:')
 
-    dt.connection.set_authorizer(authorizer_readonly)
+    dt.connection.set_authorizer(_authorizer_readonly)
 
     if "q" not in query:
         data = u'Error: No query specified'
@@ -108,10 +108,12 @@ def api():
     try:
         sw_json = open(path).read()
     except IOError:
-      
+        raise 
+
     try:
         dbname = os.path.expanduser(json.loads(sw_json)['database'])
     except:
+        raise
         
     # Run the query
     code, body = dumptruck_web(qs, dbname)
