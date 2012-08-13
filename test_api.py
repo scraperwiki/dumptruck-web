@@ -80,6 +80,7 @@ class TestAPI(unittest.TestCase):
         dt.drop('bacon', if_exists = True)
         dt.insert({'how_many': how_many}, 'bacon')
         os.environ['QUERY_STRING']='q=SELECT+how_many+FROM+bacon&box=jack-in-a'
+        os.environ['REQUEST_METHOD'] = 'GET'
         http = api_test()
 
         if check_inness == True:
@@ -114,17 +115,17 @@ class TestAPI(unittest.TestCase):
     def test_no_sw_json(self):
         "It should raise an error if there is no sw.json"
         os.system('rm -f ' + SW_JSON)
-        self._q(api_test(), 2938, check_inness = 'no sw.json', check_code = 500)
+        self._q(':memory:', 2938, check_inness = 'No sw.json', check_code = 500)
 
     def test_malformed_json(self):
         "It should raise an error if there is a malformed sw.json"
         os.system("echo '{{{{{' >> " + SW_JSON)
-        self._q(api_test(), 293898879, check_inness = 'malformed sw.json')
+        self._q(':memory:', 293898879, check_inness = 'malformed sw.json')
 
     def test_no_database_attribute(self):
         "It should raise an error if there is a well-formed sw.json with no database attribute."
         os.system("echo '{}' > " + SW_JSON)
-        self._q(api_test(), 29379, check_inness = 'malformed sw.json')
+        self._q(':memory:', 29379, check_inness = 'malformed sw.json')
 
     def test_permissions_error(self):
         '''

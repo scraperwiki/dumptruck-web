@@ -107,27 +107,34 @@ def api(boxhome = os.path.join('/', 'home'), database_call = database):
 
     code = None
     path = os.path.join(boxhome, qs['box'], 'sw.json')
+
+    # Rewrite this with with.
     try:
         sw_json = open(path).read()
     except IOError:
-        code = 500
-        body = 'No sw.json file'
+        if code == None:
+            code = 500
+            body = 'No sw.json file'
 
     try:
         sw_data = json.loads(sw_json)
     except:
-        code = 500
-        body = 'Malformed sw.json file'
+        if code == None:
+            code = 500
+            body = 'Malformed sw.json file'
 
     try:
         dbname = os.path.expanduser(sw_data['database'])
     except:
-        code = 500
-        body = 'No "database" attribute in sw.json'
+        if code == None:
+            code = 500
+            body = 'No "database" attribute in sw.json'
         
     # Run the query
     if code == None:
         code, body = database_call(qs, dbname)
+    else:
+        body = json.dumps(body)
 
     headers = HEADERS % CODE_MAP[code]
     return headers + '\n\n' + body + '\n'
