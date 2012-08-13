@@ -2,12 +2,11 @@ import os
 import json
 import unittest
 import dumptruck
-from dumptruck_web import dumptruck_web
-import example
+from dumptruck_web import database
 
 # DB = os.path.expanduser('~/dumptruck.db')
 DB = 'dumptruck.db'
-class SqliteApi(unittest.TestCase):
+class Database(unittest.TestCase):
     def setUp(self):
         try:
             os.remove(DB)
@@ -16,7 +15,7 @@ class SqliteApi(unittest.TestCase):
 
         self.dt = dumptruck.DumpTruck(dbname=DB)
 
-class TestQueries(SqliteApi):
+class TestQueries(Database):
     def test_valid_query(self):
         self.dt.insert({u'name': u'Aidan', u'favorite_color': u'Green'}, 'person')
         observedCode, observedData = dumptruck_web({'q': u'SELECT favorite_color FROM person'}, DB)
@@ -43,7 +42,7 @@ class TestQueries(SqliteApi):
         self.assertEqual(json.loads(observedData), u'Error: No query specified')
         self.assertEqual(observedCode, 400)
 
-class TestFileness(unittest.TestCase):
+class TestThatFilesAreNotCreated(unittest.TestCase):
     def setUp(self):
         try:
             os.remove(DB)
