@@ -5,7 +5,7 @@ import dumptruck
 from dumptruck_web import api
 
 DB = 'dumptruck.db'
-class TestCgi(SqliteApi):
+class TestCgi(unittest.TestCase):
     def setUp(self):
         try:
             os.remove(DB)
@@ -14,11 +14,18 @@ class TestCgi(SqliteApi):
 
         self.dt = dumptruck.DumpTruck(dbname=DB)
 
+    def test_cgi_400(self):
+        'CGI should work.'
+        os.environ['QUERY_STRING'] = 'qqqq=SELECT+favorite_color+FROM+person&box=cardboard'
+        observed = api().split('\n')[0]
+        expected = 'HTTP/1.1 400 Bad Request'
+        self.assertEqual(observed, expected)
+
     def test_cgi_200(self):
         'CGI should work.'
         os.system('cp fixtures/sw.json.dumptruck.db ~/sw.json')
         self.dt.insert({u'name': u'Aidan', u'favorite_color': u'Green'}, 'person')
-        os.environ['QUERY_STRING'] = 'q=SELECT+favorite_color+FROM+person'
+        os.environ['QUERY_STRING'] = 'q=SELECT+favorite_color+FROM+person&box=cat-in-a'
         observed = api().split('\n')
         expected = [
             'HTTP/1.1 200 OK',
@@ -31,7 +38,7 @@ class TestCgi(SqliteApi):
 
     def test_http(self):
         'Example script should return these HTTP headers.'
-        os.environ['QUERY_STRING'] = 'q=SELECT+*+FROM+sqlite_master+LIMIT+0'
+        os.environ['QUERY_STRING'] = 'q=SELECT+*+FROM+sqlite_master+LIMIT+0&box=lock'
         observed = api().split('\n')
         expected = [
             'HTTP/1.1 200 OK',
@@ -51,7 +58,7 @@ class TestAPI(unittest.TestCase):
         dt = dumptruck.DumpTruck(dbname)
         dt.drop('bacon', if_exists = True)
         dt.insert({'how_many': how_many}, 'bacon')
-        os.environ['QUERY_STRING']='q=SELECT+how_many+FROM+bacon'
+        os.environ['QUERY_STRING']='q=SELECT+how_many+FROM+bacon&box=jack-in-a'
         http = api()
 
         if check_inness == True:
@@ -75,30 +82,21 @@ class TestAPI(unittest.TestCase):
     def test_scraperwiki(self):
         os.system('cp fixtures/sw.json.scraperwiki.sqlite ~/sw.json')
         self._q('scraperwiki.sqlite', 9804)
-
-    def test_blank(self):
-        "It should raise an error if \"database\" is not specified in the sw.json"
-        os.system('cp fixtures/sw.json.blank ~/sw.json')
-        with self.assertRaises(Exception):
-            self._q(api(), 312123, check_inness = False)
         
     def test_no_sw_json(self):
         "It should raise an error if there is no sw.json"
         os.system('rm -f ~/sw.json')
-        with self.assertRaises(Exception):
-            self._q(api(), 2938, check_inness = 'no sw.json')
+        self._q(api(), 2938, check_inness = 'no sw.json')
 
     def test_malformed_json(self):
         "It should raise an error if there is a malformed sw.json"
         os.system("echo '{{{{{' >> ~/sw.json")
-        with self.assertRaises(Exception):
-            self._q(api(), 293898879, check_inness = 'malformed sw.json')
+        self._q(api(), 293898879, check_inness = 'malformed sw.json')
 
     def test_no_database_attribute(self):
         "It should raise an error if there is a well-formed sw.json with no database attribute."
         os.system("echo '{}' > ~/sw.json")
-        with self.assertRaises(Exception):
-            self._q(api(), 29379, check_inness = 'malformed sw.json')
+        self._q(api(), 29379, check_inness = 'malformed sw.json')
 
     def test_permissions_error(self):
         '''
@@ -112,16 +110,17 @@ class TestAPI(unittest.TestCase):
         You must specify the box, and that gets expanded to a path to the appropriate file.
 
         You specify it like this.
-        /knight-box/sqlite?q=SELECT+foo+FROM+baz
+        /made-of-ticky-tacky/sqlite?q=SELECT+foo+FROM+baz
 
         We could rewrite this to
-        /sqlite?q=SELECT+foo+FROM+baz&box=knight-box
+        /sqlite?q=SELECT+foo+FROM+baz&box=made-of-ticky-tacky
 
         or do regex matches on the url. The box name gets turned into
 
         1. Read the 'databases' attribute in /home/knight-box/sw.json
         2. Get the database from there.
         '''
+        raise NotImplementedError
 
 if __name__ == '__main__':
     unittest.main()

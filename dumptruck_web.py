@@ -104,7 +104,7 @@ def api():
     qs = {name: form[name].value for name in form.keys()}
     # Use the database file specified by the "database" field in ~/sw.json
 
-    path = os.path.expanduser(os.path.join('/', 'home', qs['boxname'], 'sw.json'))
+    path = os.path.expanduser(os.path.join('/', 'home', qs['box'], 'sw.json'))
     try:
         sw_json = open(path).read()
     except IOError:
