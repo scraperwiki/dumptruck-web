@@ -67,7 +67,7 @@ def database(query, dbname):
     dt.connection.set_authorizer(_authorizer_readonly)
 
     if "q" not in query:
-        data = u'Error: No query specified'
+        data = u'Error: no query specified'
         code = 400
 
     else:
@@ -81,12 +81,16 @@ def database(query, dbname):
             code = 400
 
         except sqlite3.DatabaseError, e:
+            data = u'Database error: ' + e.message
             if e.message == u"not authorized":
-                data = u'Error: Not authorized'
+                # Writes are not authorized.
                 code = 403
             else:
-                data = u'Database error: ' + e.message
-                code = 400
+                code = 500
+
+        except Exception, e:
+            data = u'Error: ' + e.message
+            code = 500
 
         else:
             code = 200

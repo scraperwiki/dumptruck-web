@@ -33,13 +33,13 @@ class TestQueries(Database):
         self.dt.execute('CREATE TABLE important(foo);')
         observedCode, observedData = database({'q': u'DROP TABLE important;'}, DB)
 
-        self.assertEqual(json.loads(observedData), u'Error: Not authorized')
+        self.assertEqual(json.loads(observedData), u'Database error: not authorized')
         self.assertEqual(observedCode, 403)
 
     def test_no_query(self):
         observedCode, observedData = database({}, DB)
 
-        self.assertEqual(json.loads(observedData), u'Error: No query specified')
+        self.assertEqual(json.loads(observedData), u'Error: no query specified')
         self.assertEqual(observedCode, 400)
 
 class TestThatFilesAreNotCreated(unittest.TestCase):
