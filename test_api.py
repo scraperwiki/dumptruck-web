@@ -6,6 +6,11 @@ from dumptruck_web import api
 
 BOXHOME = os.path.join('/', 'tmp', 'boxtests') 
 JACK = os.path.join(BOXHOME, 'jack-in-a')
+try:
+    os.makedirs(JACK)
+except OSError:
+    # Directory exists; that's okay.
+    pass
 os.environ['HOME'] = JACK
 DB = os.path.join(JACK, 'dumptruck.db')
 SW_JSON = os.path.join(JACK, 'sw.json')

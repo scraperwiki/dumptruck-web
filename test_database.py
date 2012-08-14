@@ -56,12 +56,9 @@ class TestThatFilesAreNotCreated(unittest.TestCase):
         # File is not created
         self.assertFalse(os.path.isfile(DB))
 
-        # Empty list is returned
-        self.assertListEqual(json.loads(observedData), [])
-
         # All is well.
-        self.assertEqual(observedCode, 200)
-        
+        self.assertTrue(observedCode >= 400)
+
 
 #   test_private_db(self):
 #       observedCode, observedData = database({u'q': u''}, DB)
