@@ -12,15 +12,36 @@ Install.
     apt-get install fcgiwrap nginx
 
 Configure the nginx site. (Try `/etc/nginx/sites-enabled/default`.)
-                                                  
+
     location / {                                               
-        fastcgi_param DOCUMENT_ROOT /var/www/dumptruck-web/;
-        fastcgi_param SCRIPT_NAME dumptruck_web.py;
-        fastcgi_pass unix:/var/run/fcgiwrap.socket;
-    }
+      fastcgi_param DOCUMENT_ROOT /var/www/dumptruck-web/;
+      fastcgi_param SCRIPT_NAME dumptruck_web.py;
+      fastcgi_param SCRIPT_FILENAME /var/www/dumptruck-web/dumptruck_web.py;
+      fastcgi_pass unix:/var/run/fcgiwrap.socket;  
+      
+      # Fill in the gaps. This does not overwrite previous settings,
+      # so it goes last
+      include /etc/nginx/fastcgi_params;
+     }
 
 This depends on `/var/www/dumptruck_web.py` being a cgi script file that www-data
 can execute.
+ 
+If you're installing this as part of cobalt, the configuration is 
+
+    rewrite  ^\/([^\s/]+)\/sqlite\/?$  /$1/sqlite?box=$1;
+
+    location ~ ^\/([^\s/]+)\/sqlite\/?$ {
+        fastcgi_param DOCUMENT_ROOT /var/www/dumptruck-web/;
+        fastcgi_param SCRIPT_NAME dumptruck_web.py;
+        fastcgi_param SCRIPT_FILENAME /var/www/dumptruck-web/dumptruck_web.py;
+
+        # Fill in the gaps. This does not overwrite previous settings,
+        # so it goes last
+        include /etc/nginx/fastcgi_params;
+        fastcgi_pass unix:/var/run/fcgiwrap.socket;
+    }
+
 
 Specify some high number of processes in `/etc/init.d/fcgiwrap` like so.
 
