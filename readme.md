@@ -12,7 +12,7 @@ Install.
     apt-get install fcgiwrap nginx
 
 Configure the nginx site. (Try `/etc/nginx/sites-enabled/default`.)
-                                                  
+
     location / {                                               
       fastcgi_param DOCUMENT_ROOT /var/www/dumptruck-web/;
       fastcgi_param SCRIPT_NAME dumptruck_web.py;
@@ -28,6 +28,8 @@ This depends on `/var/www/dumptruck_web.py` being a cgi script file that www-dat
 can execute.
  
 If you're installing this as part of cobalt, the configuration is 
+
+    rewrite  ^\/([^\s/]+)\/sqlite\/?$  /$1/sqlite?box=$1;
 
     location ~ ^\/([^\s/]+)\/sqlite\/?$ {
         fastcgi_param DOCUMENT_ROOT /var/www/dumptruck-web/;
