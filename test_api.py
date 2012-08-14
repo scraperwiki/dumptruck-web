@@ -74,18 +74,21 @@ class TestAPI(unittest.TestCase):
         """For testing sw.json database file configuration
         By default, check whether how_many is in the output.
         Set check_inness to False to avoid this. Set it to something else to check that."""
-        dbname = os.path.join(JACK, os.path.expanduser(dbname))
-        dt = dumptruck.DumpTruck(dbname)
-        dt.drop('bacon', if_exists = True)
-        dt.insert({'how_many': how_many}, 'bacon')
-        os.environ['QUERY_STRING']='q=SELECT+how_many+FROM+bacon&box=jack-in-a'
-        os.environ['REQUEST_METHOD'] = 'GET'
-        http = api_test()
 
         if check_inness == True:
             check_inness = how_many
         elif check_inness == False:
             check_inness = None
+
+        if check_inness != None:
+            dbname = os.path.join(JACK, os.path.expanduser(dbname))
+            dt = dumptruck.DumpTruck(dbname)
+            dt.drop('bacon', if_exists = True)
+            dt.insert({'how_many': how_many}, 'bacon')
+
+        os.environ['QUERY_STRING']='q=SELECT+how_many+FROM+bacon&box=jack-in-a'
+        os.environ['REQUEST_METHOD'] = 'GET'
+        http = api_test()
 
         if check_inness != None:
             self.assertIn(unicode(check_inness), http)
@@ -125,6 +128,18 @@ class TestAPI(unittest.TestCase):
         "It should raise an error if there is a well-formed sw.json with no database attribute."
         os.system("echo '{}' > " + SW_JSON)
         self._q(':memory:', 29379, check_inness = 'No \\"database\\" attribute')
+
+    def test_report_if_database_does_not_exist(self):
+        '''
+        As a user who knows languages other than SQL and probably doesn't
+            want to run SQL on an empty database,
+        I want the web SQLite API to respond with an error if the database
+            specified in sw.json doesn't exist
+        So that I can figure out why my queries are returning nothing.
+        '''
+        os.system('rm ' + os.path.join(JACK, '*'))
+        os.system('cp fixtures/sw.json.scraperwiki.sqlite ' + SW_JSON)
+        self._q('scraperwiki.sqlite', 9804, check_inness = False)
 
     def test_permissions_error(self):
         '''
