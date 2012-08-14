@@ -94,3 +94,18 @@ An example (simple) script would be
 
 ## Add later
 Gzip responses.
+
+## SQLite errors
+The SQLite errors are normally pretty good, so an api call with that raises a
+SQLite error normally displays the error messages. This includes
+
+* Locked databases
+* Ungrammatical SQL
+
+Some of these errors aren't great, like
+
+* Database that the user doesn't have permission to read
+
+We also treat some things as errors that SQLite doesn't:
+
+* Databases that don't exist

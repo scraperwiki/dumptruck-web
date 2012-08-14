@@ -153,15 +153,13 @@ class TestAPI(unittest.TestCase):
         You must specify the box, and that gets expanded to a path to the appropriate file.
 
         You specify it like this.
-        /made-of-ticky-tacky/sqlite?q=SELECT+foo+FROM+baz
+        /jack-in-the/sqlite?q=SELECT+foo+FROM+baz
 
-        We could rewrite this to
+        The web server rewrites this to
         /sqlite?q=SELECT+foo+FROM+baz&box=made-of-ticky-tacky
 
-        or do regex matches on the url. The box name gets turned into
-
-        1. Read the 'databases' attribute in /home/knight-box/sw.json
-        2. Get the database from there.
+        The CGI script (this repository) reads that query string and should
+        read the 'databases' attribute in /home/jack-in-the/sw.json
         '''
         raise NotImplementedError
 
