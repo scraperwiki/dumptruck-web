@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import os
 import cgi
 import sqlite3
@@ -151,4 +152,4 @@ def api(boxhome = os.path.join('/', 'home'), database_call = database):
     return headers + '\n\n' + body + '\n'
 
 if __name__ == '__main__':
-    api()
+    print api()
