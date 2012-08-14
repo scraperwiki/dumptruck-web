@@ -51,7 +51,7 @@ class TestCGI(unittest.TestCase):
             'HTTP/1.1 200 OK',
             'Content-Type: application/json; charset=utf-8',
             '',
-            '[{"favorite_color":"Green"}]',
+            '[{"favorite_color": "Green"}]',
             '',
         ]
         self.assertEqual(observed, expected)
