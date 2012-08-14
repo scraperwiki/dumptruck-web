@@ -169,20 +169,20 @@ class TestAPI(unittest.TestCase):
         os.system('chmod 600 ' + dbname)
         os.system('rm -f ' + dbname)
 
-    def test_script_can_determine_database_file(self):
-        '''
-        You must specify the box, and that gets expanded to a path to the appropriate file.
+#   def test_script_can_determine_database_file(self):
+#       '''
+#       You must specify the box, and that gets expanded to a path to the appropriate file.
 
-        You specify it like this.
-        /jack-in-the/sqlite?q=SELECT+foo+FROM+baz
+#       You specify it like this.
+#       /jack-in-the/sqlite?q=SELECT+foo+FROM+baz
 
-        The web server rewrites this to
-        /sqlite?q=SELECT+foo+FROM+baz&box=made-of-ticky-tacky
+#       The web server rewrites this to
+#       /sqlite?q=SELECT+foo+FROM+baz&box=made-of-ticky-tacky
 
-        The CGI script (this repository) reads that query string and should
-        read the 'databases' attribute in /home/jack-in-the/sw.json
-        '''
-        raise NotImplementedError
+#       The CGI script (this repository) reads that query string and should
+#       read the 'databases' attribute in /home/jack-in-the/sw.json
+#       '''
+#       raise NotImplementedError
 
 if __name__ == '__main__':
     unittest.main()
