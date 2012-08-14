@@ -58,11 +58,18 @@ def database(query, dbname):
     """
     if os.path.isfile(dbname):
         # Check for the database file
-        dt = dumptruck.DumpTruck(dbname)
-
+        try:
+            dt = dumptruck.DumpTruck(dbname)
+        except sqlite3.OperationalError, e:
+            if e.message == 'unable to open database file':
+                data = e.message + ' (Check that the file exists and is readable by everyone.)'
+                code = 500
+                return code, json.dumps(data)
     else:
         # Use a memory database if there is no dumptruck.db
-        dt = dumptruck.DumpTruck(':memory:')
+        data = 'Error: database file does not exist.'
+        code = 500
+        return code, json.dumps(data)
 
     dt.connection.set_authorizer(_authorizer_readonly)
 

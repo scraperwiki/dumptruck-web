@@ -75,6 +75,14 @@ class TestAPI(unittest.TestCase):
         By default, check whether how_many is in the output.
         Set check_inness to False to avoid this. Set it to something else to check that."""
 
+        try:
+            os.remove(dbname)
+        except OSError:
+            pass
+
+        if not os.path.isdir(JACK):
+            os.makedirs(JACK)
+
         if check_inness == True:
             check_inness = how_many
         elif check_inness == False:
@@ -100,7 +108,10 @@ class TestAPI(unittest.TestCase):
         body = '\n\n'.join(http.split('\n\n')[1:])
         json.loads(body)
 
-        os.remove(dbname)
+        try:
+            os.remove(dbname)
+        except OSError:
+            pass
 
     def test_dumptruck(self):
         os.system('cp fixtures/sw.json.dumptruck.db ' + SW_JSON)
@@ -137,16 +148,26 @@ class TestAPI(unittest.TestCase):
             specified in sw.json doesn't exist
         So that I can figure out why my queries are returning nothing.
         '''
-        os.system('rm ' + os.path.join(JACK, '*'))
+        os.system('rm -f ' + os.path.join(JACK, '*'))
         os.system('cp fixtures/sw.json.scraperwiki.sqlite ' + SW_JSON)
-        self._q('scraperwiki.sqlite', 9804, check_inness = False)
+        os.environ['QUERY_STRING'] = 'q=SELECT+favorite_color+FROM+person&box=jack-in-a'
+        http = api_test()
+        self.assertIn('500', http.split('\n')[0])
+        self.assertIn('Error: database file does not exist', http)
 
     def test_permissions_error(self):
         '''
         If the database cannot be accessed because of a lack of permission,
         say so rather than just giving the ordinary cryptic message.
         '''
-        raise NotImplementedError
+        dbname = os.path.join(JACK, 'scraperwiki.sqlite')
+        os.system('cp fixtures/sw.json.scraperwiki.sqlite ' + SW_JSON)
+        os.system('touch ' + dbname)
+        os.system('chmod 000 ' + dbname)
+        http = api_test()
+        self.assertIn(u'(Check that the file exists and is readable by everyone.)', http)
+        os.system('chmod 600 ' + dbname)
+        os.system('rm -f ' + dbname)
 
     def test_script_can_determine_database_file(self):
         '''
