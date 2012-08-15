@@ -47,14 +47,14 @@ class TestCGI(unittest.TestCase):
         self.assertEqual(observed, expected)
 
     def test_cgi_400_real(self):
-        """Bad Requests are bad."""
+        """Invalid CGI query parameters give Bad Status Code."""
         os.environ['QUERY_STRING'] = 'qqqq=SELECT+favorite_color+FROM+person&box=jack-in-a'
         observed = api_helper().split('\n')[0]
         expected = 'HTTP/1.1 400 Bad Request'
         self.assertEqual(observed, expected)
 
     def test_cgi_200(self):
-        """OK result."""
+        """Good query gives good result."""
         os.system('cp fixtures/sw.json.dumptruck.db ' + SW_JSON)
         self.dt.insert({u'name': u'Aidan', u'favorite_color': u'Green'}, 'person')
         os.environ['QUERY_STRING'] = 'q=SELECT+favorite_color+FROM+person&box=jack-in-a'
@@ -69,7 +69,7 @@ class TestCGI(unittest.TestCase):
         self.assertEqual(observed, expected)
 
     def test_http(self):
-        'Example script should return these HTTP headers.'
+        """A complete example, including HTTP response headers."""
         os.environ['QUERY_STRING'] = 'q=SELECT+*+FROM+sqlite_master+LIMIT+0&box=jack-in-a'
         observed = api_helper().split('\n')
         expected = [
