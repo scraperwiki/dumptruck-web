@@ -56,7 +56,7 @@ class TestThatFilesAreNotCreated(unittest.TestCase):
         # File is not created
         self.assertFalse(os.path.isfile(DB))
 
-        # All is well.
+        # All isn't well.
         self.assertTrue(observedCode >= 400)
 
 if __name__ == '__main__':
