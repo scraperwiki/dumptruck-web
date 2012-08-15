@@ -65,12 +65,11 @@ def database(query, dbname):
             if e.message == 'unable to open database file':
                 data = e.message + ' (Check that the file exists and is readable by everyone.)'
                 code = 500
-                return code, json.dumps(data)
+                return code, data
     else:
-        # Use a memory database if there is no dumptruck.db
         data = 'Error: database file does not exist.'
         code = 500
-        return code, json.dumps(data)
+        return code, data
 
     dt.connection.set_authorizer(_authorizer_readonly)
 
@@ -103,9 +102,9 @@ def database(query, dbname):
         else:
             code = 200
 
-    return code, json.dumps(data)
+    return code, data
 
-def api(boxhome = os.path.join('/', 'home'), database_call = database):
+def api(boxhome = os.path.join('/', 'home')):
     """
     It takes a query string like
 
@@ -144,9 +143,8 @@ def api(boxhome = os.path.join('/', 'home'), database_call = database):
         
     # Run the query
     if code == None:
-        code, body = database_call(qs, dbname)
-    else:
-        body = json.dumps(body)
+        code, body = database(qs, dbname)
+    body = json.dumps(body)
 
     headers = HEADERS % CODE_MAP[code]
     return headers + '\n\n' + body + '\n'

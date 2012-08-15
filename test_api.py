@@ -15,12 +15,13 @@ os.environ['HOME'] = JACK
 DB = os.path.join(JACK, 'dumptruck.db')
 SW_JSON = os.path.join(JACK, 'sw.json')
 
-def api_test(*args, **kwargs):
+def api_helper(*args, **kwargs):
     if 'boxhome' not in kwargs:
         kwargs['boxhome'] = BOXHOME
     return api(*args, **kwargs)
 
 class TestCGI(unittest.TestCase):
+    """CGI"""
     def setUp(self):
         try:
             os.remove(DB)
@@ -33,25 +34,31 @@ class TestCGI(unittest.TestCase):
         self.dt = dumptruck.DumpTruck(dbname=DB)
 
     def test_cgi_400_fake(self):
-        'CGI should work.'
+        """Result from database() call appears as HTTP Status."""
         os.environ['QUERY_STRING'] = 'qqqq=SELECT+favorite_color+FROM+person&box=jack-in-a'
-        observed = api_test(database_call = lambda q, d: (400, 'Blah blah blah')).split('\n')[0]
+        import dumptruck_web
+        old_database = dumptruck_web.database
+        dumptruck_web.database = lambda q, d: (400, 'Blah blah blah')
+        try:
+            observed = api_helper().split('\n')[0]
+        finally:
+            dumptruck_web.database = old_database
         expected = 'HTTP/1.1 400 Bad Request'
         self.assertEqual(observed, expected)
 
     def test_cgi_400_real(self):
-        'CGI should work.'
+        """Bad Requests are bad."""
         os.environ['QUERY_STRING'] = 'qqqq=SELECT+favorite_color+FROM+person&box=jack-in-a'
-        observed = api_test().split('\n')[0]
+        observed = api_helper().split('\n')[0]
         expected = 'HTTP/1.1 400 Bad Request'
         self.assertEqual(observed, expected)
 
     def test_cgi_200(self):
-        'CGI should work.'
+        """OK result."""
         os.system('cp fixtures/sw.json.dumptruck.db ' + SW_JSON)
         self.dt.insert({u'name': u'Aidan', u'favorite_color': u'Green'}, 'person')
         os.environ['QUERY_STRING'] = 'q=SELECT+favorite_color+FROM+person&box=jack-in-a'
-        observed = api_test().split('\n')
+        observed = api_helper().split('\n')
         expected = [
             'HTTP/1.1 200 OK',
             'Content-Type: application/json; charset=utf-8',
@@ -64,7 +71,7 @@ class TestCGI(unittest.TestCase):
     def test_http(self):
         'Example script should return these HTTP headers.'
         os.environ['QUERY_STRING'] = 'q=SELECT+*+FROM+sqlite_master+LIMIT+0&box=jack-in-a'
-        observed = api_test().split('\n')
+        observed = api_helper().split('\n')
         expected = [
             'HTTP/1.1 200 OK',
             'Content-Type: application/json; charset=utf-8',
@@ -75,6 +82,7 @@ class TestCGI(unittest.TestCase):
         self.assertListEqual(observed, expected)
 
 class TestAPI(unittest.TestCase):
+    """API"""
     def _q(self, dbname, how_many, check_inness = True, check_code = None):
         """For testing sw.json database file configuration
         By default, check whether how_many is in the output.
@@ -101,7 +109,7 @@ class TestAPI(unittest.TestCase):
 
         os.environ['QUERY_STRING']='q=SELECT+how_many+FROM+bacon&box=jack-in-a'
         os.environ['REQUEST_METHOD'] = 'GET'
-        http = api_test()
+        http = api_helper()
 
         if check_inness != None:
             self.assertIn(unicode(check_inness), http)
@@ -156,7 +164,7 @@ class TestAPI(unittest.TestCase):
         os.system('rm -f ' + os.path.join(JACK, '*'))
         os.system('cp fixtures/sw.json.scraperwiki.sqlite ' + SW_JSON)
         os.environ['QUERY_STRING'] = 'q=SELECT+favorite_color+FROM+person&box=jack-in-a'
-        http = api_test()
+        http = api_helper()
         self.assertIn('500', http.split('\n')[0])
         self.assertIn('Error: database file does not exist', http)
 
@@ -169,7 +177,7 @@ class TestAPI(unittest.TestCase):
         os.system('cp fixtures/sw.json.scraperwiki.sqlite ' + SW_JSON)
         os.system('touch ' + dbname)
         os.system('chmod 000 ' + dbname)
-        http = api_test()
+        http = api_helper()
         self.assertIn(u'(Check that the file exists and is readable by everyone.)', http)
         os.system('chmod 600 ' + dbname)
         os.system('rm -f ' + dbname)
