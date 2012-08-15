@@ -34,15 +34,15 @@ class TestCGI(unittest.TestCase):
         self.dt = dumptruck.DumpTruck(dbname=DB)
 
     def test_cgi_400_fake(self):
-        """Result from database() call appears as HTTP Status."""
+        """Result from execute_query() call appears as HTTP Status."""
         os.environ['QUERY_STRING'] = 'qqqq=SELECT+favorite_color+FROM+person&box=jack-in-a'
         import dumptruck_web
-        old_database = dumptruck_web.database
-        dumptruck_web.database = lambda q, d: (400, 'Blah blah blah')
+        old_fn = dumptruck_web.execute_query
+        dumptruck_web.execute_query = lambda q, d: (400, 'Blah blah blah')
         try:
             observed = api_helper().split('\n')[0]
         finally:
-            dumptruck_web.database = old_database
+            dumptruck_web.execute_query = old_fn
         expected = 'HTTP/1.1 400 Bad Request'
         self.assertEqual(observed, expected)
 

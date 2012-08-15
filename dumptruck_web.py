@@ -1,9 +1,11 @@
 #!/usr/bin/env python
-import os
+
 import cgi
-import sqlite3
-import dumptruck
 import json
+import os
+import sqlite3
+
+import dumptruck
 
 HEADERS = '''HTTP/1.1 %s
 Content-Type: application/json; charset=utf-8'''
@@ -19,6 +21,15 @@ CODE_MAP = {
     404: '404 Not Found',
     500: '500 ',
 }
+
+class QueryError(Exception):
+    """Exception during query processing."""
+    def __init__(self, msg, code, **k):
+        """Code which catches these exceptions, expects to find an HTTP Status code in
+        code.
+        """
+        self.code = code
+        super(QueryError, self).__init__(msg, **k)
 
 def _authorizer_readonly(action_code, tname, cname, sql_location, trigger):
     """SQLite callback that we use to prohibit any SQL commands that could change a
@@ -58,7 +69,7 @@ def _authorizer_readonly(action_code, tname, cname, sql_location, trigger):
 
     return sqlite3.SQLITE_DENY
 
-def database(query, dbname):
+def execute_query(sql, dbname):
     """
     Given an SQL query and a SQLite database name, return an HTTP status code
     and the JSON-encoded response from the database.
@@ -79,13 +90,6 @@ def database(query, dbname):
 
     dt.connection.set_authorizer(_authorizer_readonly)
 
-    if "q" not in query:
-        data = u'Error: no query specified'
-        code = 400
-        return code, data
-
-    sql = query['q']
-
     try:
         data = dt.execute(sql)
         code = 200
@@ -105,50 +109,65 @@ def database(query, dbname):
 
     return code, data
 
-def api(boxhome = os.path.join('/', 'home')):
+def api(boxhome=os.path.join('/', 'home')):
     """
+    Implements a CGI interface for SQL queries to boxes.
+
     It takes a query string like
 
         q=SELECT+foo+FROM+bar&boxname=screwdriver
 
-    Currently, q and boxname are the only parameters.
+    Currently, *q* and *boxname* are the only parameters.
     """
-    form = cgi.FieldStorage()
-    qs = {name: form[name].value for name in form.keys()}
-    # Use the database file specified by the "database" field in ~/sw.json
-
-    code = None
-    path = os.path.join(boxhome, qs['box'], 'sw.json')
-
-    # Rewrite this with with.
-    try:
-        sw_json = open(path).read()
-    except IOError:
-        if code == None:
-            code = 500
-            body = 'No sw.json file'
 
     try:
-        sw_data = json.loads(sw_json)
-    except:
-        if code == None:
-            code = 500
-            body = 'Malformed sw.json file'
-
-    try:
-        dbname = os.path.join(boxhome, qs['box'], os.path.expanduser(sw_data['database']))
-    except:
-        if code == None:
-            code = 500
-            body = 'No "database" attribute in sw.json'
-        
-    # Run the query
-    if code == None:
-        code, body = database(qs, dbname)
+        sql,box = parse_query_string()
+        dbname = get_database_name(boxhome, box)
+        code,body = execute_query(sql, dbname)
+    except QueryError as e:
+        code = e.code
+        body = e.message
     body = json.dumps(body)
 
     headers = HEADERS % CODE_MAP[code]
     return headers + '\n\n' + body + '\n'
+
+def parse_query_string():
+    """Return sql,box as a pair.  Extracted from the CGI parameters."""
+    form = cgi.FieldStorage()
+    qs = {name: form[name].value for name in form.keys()}
+
+    if "q" not in qs:
+        raise QueryError('Error: no query specified', code=400)
+    if 'box' not in qs:
+        raise QueryError('Error: no box specified', code=400)
+
+    sql = qs['q']
+    box = qs['box']
+    return sql, box
+
+def get_database_name(boxhome, box):
+    """Use the database file specified by the "database" field in ~/sw.json."""
+
+    path = os.path.join(boxhome, box, 'sw.json')
+
+    try:
+        with open(path) as f:
+            sw_json = f.read()
+    except IOError:
+        raise QueryError('Error: No sw.json file', code=500)
+
+    try:
+        sw_data = json.loads(sw_json)
+    except ValueError:
+        raise QueryError('Malformed sw.json file', code=500)
+
+    try:
+        dbname = os.path.join(boxhome, box, os.path.expanduser(sw_data['database']))
+    except KeyError:
+        raise QueryError('No "database" attribute in sw.json', code=500)
+
+    return dbname
 
 if __name__ == '__main__':
     print api()
