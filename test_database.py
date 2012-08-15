@@ -20,6 +20,7 @@ class Database(unittest.TestCase):
 
 class TestQueries(Database):
     def test_valid_query(self):
+        """Valid query works."""
         self.dt.insert({u'name': u'Aidan', u'favorite_color': u'Green'}, 'person')
         observedCode, observedData = execute_query('SELECT favorite_color FROM person', DB)
 
@@ -27,12 +28,14 @@ class TestQueries(Database):
         self.assertEqual(observedCode, 200)
 
     def test_invalid_query(self):
+        """SQL Syntax error gives 4xx status code."""
         observedCode, observedData = execute_query('chainsaw', DB)
 
         self.assertEqual(observedData, u'SQL error: near "chainsaw": syntax error')
         self.assertEqual(observedCode, 400)
 
-    def test_destructive_query(self):
+    def test_create_table(self):
+        """Query that modifies database gives 403 status code."""
         self.dt.execute('CREATE TABLE important(foo);')
         observedCode, observedData = execute_query('DROP TABLE important;', DB)
 
@@ -40,12 +43,14 @@ class TestQueries(Database):
         self.assertEqual(observedCode, 403)
 
     def test_null_query(self):
+        """Empty query."""
         observedCode, observedData = execute_query('', DB)
 
         self.assertEqual(observedData, None)
         self.assertEqual(observedCode, 200)
 
 class TestThatFilesAreNotCreated(unittest.TestCase):
+    """Removing Files."""
     def setUp(self):
         try:
             os.remove(DB)
@@ -53,7 +58,7 @@ class TestThatFilesAreNotCreated(unittest.TestCase):
             pass
 
     def test_query_nonexistant(self):
-        "When we query a database file that doesn't exist"
+        """No files are created merely by trying to execute a query on a non-existent database."""
         observedCode, observedData = execute_query({'q': u'SELECT 3 FROM sqlite_master'}, DB)
 
         # File is not created
