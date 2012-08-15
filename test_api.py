@@ -83,10 +83,14 @@ class TestCGI(unittest.TestCase):
 
 class TestAPI(unittest.TestCase):
     """API"""
-    def _q(self, dbname, how_many, check_inness = True, check_code = None):
-        """For testing sw.json database file configuration
-        By default, check whether how_many is in the output.
-        Set check_inness to False to avoid this. Set it to something else to check that."""
+    def _q(self, dbname, p, output_check=None, code_check=None):
+        """For testing sw.json database file configuration.  Runs some query on the
+        database *dbname*, using *p* as a parameter.  Normally the output will be
+        inspected to see if it contains *p* but if *output_check* is specified, then that
+        value will be checked for in the output instead.
+
+        *code_check* is used to check the status code.
+        """
 
         try:
             os.remove(dbname)
@@ -96,26 +100,20 @@ class TestAPI(unittest.TestCase):
         if not os.path.isdir(JACK):
             os.makedirs(JACK)
 
-        if check_inness == True:
-            check_inness = how_many
-        elif check_inness == False:
-            check_inness = None
+        dbname = os.path.join(JACK, os.path.expanduser(dbname))
+        dt = dumptruck.DumpTruck(dbname)
+        dt.drop('bacon', if_exists=True)
+        dt.insert({'p': p}, 'bacon')
 
-        if check_inness != None:
-            dbname = os.path.join(JACK, os.path.expanduser(dbname))
-            dt = dumptruck.DumpTruck(dbname)
-            dt.drop('bacon', if_exists = True)
-            dt.insert({'how_many': how_many}, 'bacon')
-
-        os.environ['QUERY_STRING']='q=SELECT+how_many+FROM+bacon&box=jack-in-a'
+        os.environ['QUERY_STRING']='q=SELECT+p+FROM+bacon&box=jack-in-a'
         os.environ['REQUEST_METHOD'] = 'GET'
         http = api_helper()
 
-        if check_inness != None:
-            self.assertIn(unicode(check_inness), http)
+        if output_check:
+            self.assertIn(unicode(output_check), http)
 
-        if check_code != None:
-            self.assertIn(unicode(check_code), http.split('\n')[0])
+        if code_check:
+            self.assertIn(unicode(code_check), http.split('\n')[0])
 
         # The body should be valid JSON
         body = '\n\n'.join(http.split('\n\n')[1:])
@@ -127,40 +125,38 @@ class TestAPI(unittest.TestCase):
             pass
 
     def test_dumptruck(self):
+        """Works with ordinary file."""
         os.system('cp fixtures/sw.json.dumptruck.db ' + SW_JSON)
         self._q('dumptruck.db', 2124)
 
     def test_home_dumptruck(self):
+        """Uses database found in home directory."""
         os.system('cp fixtures/sw.json.home-dumptruck.db ' + SW_JSON)
         self._q('~/dumptruck.db', 3824)
 
     def test_scraperwiki(self):
+        """Can use other popular database filenames."""
         os.system('cp fixtures/sw.json.scraperwiki.sqlite ' + SW_JSON)
         self._q('scraperwiki.sqlite', 9804)
         
     def test_no_sw_json(self):
-        "It should raise an error if there is no sw.json"
+        """Raises an error if there is no sw.json."""
         os.system('rm -f ' + SW_JSON)
-        self._q(':memory:', 2938, check_inness = 'No sw.json', check_code = 500)
+        self._q(':memory:', 2938, output_check='No sw.json', code_check=500)
 
     def test_malformed_json(self):
-        "It should raise an error if there is a malformed sw.json"
+        """Raises an error if there is a malformed sw.json."""
         os.system("echo '{{{{{' >> " + SW_JSON)
-        self._q(':memory:', 293898879, check_inness = 'Malformed sw.json')
+        self._q(':memory:', 293898879, output_check='Malformed sw.json')
 
     def test_no_database_attribute(self):
-        "It should raise an error if there is a well-formed sw.json with no database attribute."
+        """Raises an error if there is a well-formed sw.json with no database attribute."""
         os.system("echo '{}' > " + SW_JSON)
-        self._q(':memory:', 29379, check_inness = 'No \\"database\\" attribute')
+        self._q(':memory:', 29379, output_check='No \\"database\\" attribute')
 
     def test_report_if_database_does_not_exist(self):
-        '''
-        As a user who knows languages other than SQL and probably doesn't
-            want to run SQL on an empty database,
-        I want the web SQLite API to respond with an error if the database
-            specified in sw.json doesn't exist
-        So that I can figure out why my queries are returning nothing.
-        '''
+        """Raises an error if the database specified in sw.json doesn't exist."""
+
         os.system('rm -f ' + os.path.join(JACK, '*'))
         os.system('cp fixtures/sw.json.scraperwiki.sqlite ' + SW_JSON)
         os.environ['QUERY_STRING'] = 'q=SELECT+favorite_color+FROM+person&box=jack-in-a'
@@ -169,10 +165,8 @@ class TestAPI(unittest.TestCase):
         self.assertIn('Error: database file does not exist', http)
 
     def test_permissions_error(self):
-        '''
-        If the database cannot be accessed because of a lack of permission,
-        say so rather than just giving the ordinary cryptic message.
-        '''
+        """Raises an error if access to the database is not permitted."""
+
         dbname = os.path.join(JACK, 'scraperwiki.sqlite')
         os.system('cp fixtures/sw.json.scraperwiki.sqlite ' + SW_JSON)
         os.system('touch ' + dbname)
@@ -181,21 +175,6 @@ class TestAPI(unittest.TestCase):
         self.assertIn(u'(Check that the file exists and is readable by everyone.)', http)
         os.system('chmod 600 ' + dbname)
         os.system('rm -f ' + dbname)
-
-#   def test_script_can_determine_database_file(self):
-#       '''
-#       You must specify the box, and that gets expanded to a path to the appropriate file.
-
-#       You specify it like this.
-#       /jack-in-the/sqlite?q=SELECT+foo+FROM+baz
-
-#       The web server rewrites this to
-#       /sqlite?q=SELECT+foo+FROM+baz&box=made-of-ticky-tacky
-
-#       The CGI script (this repository) reads that query string and should
-#       read the 'databases' attribute in /home/jack-in-the/sw.json
-#       '''
-#       raise NotImplementedError
 
 if __name__ == '__main__':
     unittest.main()
