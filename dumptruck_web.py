@@ -7,6 +7,7 @@ import json
 
 HEADERS = '''HTTP/1.1 %s
 Content-Type: application/json; charset=utf-8'''
+
 CODE_MAP = {
     200: '200 OK',
     301: '301 Moved permanently',
@@ -20,7 +21,12 @@ CODE_MAP = {
 }
 
 def _authorizer_readonly(action_code, tname, cname, sql_location, trigger):
-    "SQLite authorize to prohibit destructive SQL commands"
+    """SQLite callback that we use to prohibit any SQL commands that could change a
+    database; effectively making it readonly.
+
+    Copied from scraperwiki.com sources.
+    """
+
     readonlyops = [
         sqlite3.SQLITE_SELECT,
         sqlite3.SQLITE_READ,
@@ -76,31 +82,26 @@ def database(query, dbname):
     if "q" not in query:
         data = u'Error: no query specified'
         code = 400
+        return code, data
 
-    else:
-        sql = query['q']
+    sql = query['q']
 
-        try:
-            data = dt.execute(sql)
-
-        except sqlite3.OperationalError, e:
-            data = u'SQL error: ' + e.message
-            code = 400
-
-        except sqlite3.DatabaseError, e:
-            data = u'Database error: ' + e.message
-            if e.message == u"not authorized":
-                # Writes are not authorized.
-                code = 403
-            else:
-                code = 500
-
-        except Exception, e:
-            data = u'Error: ' + e.message
-            code = 500
-
+    try:
+        data = dt.execute(sql)
+        code = 200
+    except sqlite3.OperationalError, e:
+        data = u'SQL error: ' + e.message
+        code = 400
+    except sqlite3.DatabaseError, e:
+        data = u'Database error: ' + e.message
+        if e.message == u"not authorized":
+            # Writes are not authorized.
+            code = 403
         else:
-            code = 200
+            code = 500
+    except Exception, e:
+        data = u'Error: ' + e.message
+        code = 500
 
     return code, data
 
