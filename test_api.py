@@ -62,6 +62,7 @@ class TestCGI(unittest.TestCase):
         # and a body which is checked via JSON decoding.
         observed = api_helper().split('\n\n', 1)
         expected = ('HTTP/1.1 200 OK\n' +
+            'Status: 200 OK\n' +
             'Content-Type: application/json; charset=utf-8')
         self.assertEqual(observed[0], expected)
         expected = [{"favorite_color": "Green"}]
@@ -87,6 +88,7 @@ class TestCGI(unittest.TestCase):
         observed = api_helper().split('\n')
         expected = [
             'HTTP/1.1 200 OK',
+            'Status: 200 OK',
             'Content-Type: application/json; charset=utf-8',
             '',
             '[]',

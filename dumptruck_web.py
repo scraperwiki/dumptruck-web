@@ -7,10 +7,13 @@ import sqlite3
 
 import dumptruck
 
-HEADERS = '''HTTP/1.1 %s
+# For fastcgi at least, the HTTP status code must be specified
+# as a 'Status:' header.  See http://www.fastcgi.com/docs/faq.html#httpstatus
+HEADERS = '''HTTP/1.1 %(status)s
+Status: %(status)s
 Content-Type: application/json; charset=utf-8'''
 
-CODE_MAP = {
+LONG_STATUS = {
     200: '200 OK',
     301: '301 Moved permanently',
     302: '302 Found',
@@ -129,7 +132,7 @@ def api(boxhome=os.path.join('/', 'home')):
         body = e.message
     body = json.dumps(body)
 
-    headers = HEADERS % CODE_MAP[code]
+    headers = HEADERS % dict(status=LONG_STATUS[code])
     return headers + '\n\n' + body + '\n'
 
 def parse_query_string():
