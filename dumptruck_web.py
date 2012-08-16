@@ -135,15 +135,15 @@ def api(boxhome=os.path.join('/', 'home')):
 def parse_query_string():
     """Return sql,box as a pair.  Extracted from the CGI parameters."""
     form = cgi.FieldStorage()
-    qs = {name: form[name].value for name in form.keys()}
+    qs = form.getlist('q')
+    boxs = form.getlist('box')
+    if len(qs) != 1:
+        raise QueryError('Error: exactly one q= parameter should be specified', code=400)
+    if len(boxs) != 1:
+        raise QueryError('Error: exactly one box= parameter should be specified', code=400)
 
-    if "q" not in qs:
-        raise QueryError('Error: no query specified', code=400)
-    if 'box' not in qs:
-        raise QueryError('Error: no box specified', code=400)
-
-    sql = qs['q']
-    box = qs['box']
+    sql = qs[0]
+    box = boxs[0]
     return sql, box
 
 def get_database_name(boxhome, box):

@@ -67,6 +67,20 @@ class TestCGI(unittest.TestCase):
             '',
         ]
         self.assertEqual(observed, expected)
+    
+    def test_doubled_up_q(self):
+        """Not harmful to specify q=... twice."""
+        os.environ['QUERY_STRING'] = 'q=SELECT+7&q=SELECT+3&box=jack-in-a'
+        observed = api_helper().split('\n')[0]
+        expected = 'HTTP/1.1 400 Bad Request'
+        self.assertEqual(observed, expected)
+    
+    def test_doubled_up_box(self):
+        """Not harmful to specify box=... twice."""
+        os.environ['QUERY_STRING'] = 'q=SELECT+7&box=jack-in-a&box=bob'
+        observed = api_helper().split('\n')[0]
+        expected = 'HTTP/1.1 400 Bad Request'
+        self.assertEqual(observed, expected)
 
     def test_http(self):
         """A complete example, including HTTP response headers."""
