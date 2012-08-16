@@ -58,15 +58,14 @@ class TestCGI(unittest.TestCase):
         os.system('cp fixtures/sw.json.dumptruck.db ' + SW_JSON)
         self.dt.insert({u'name': u'Aidan', u'favorite_color': u'Green'}, 'person')
         os.environ['QUERY_STRING'] = 'q=SELECT+favorite_color+FROM+person&box=jack-in-a'
-        observed = api_helper().split('\n')
-        expected = [
-            'HTTP/1.1 200 OK',
-            'Content-Type: application/json; charset=utf-8',
-            '',
-            '[{"favorite_color": "Green"}]',
-            '',
-        ]
-        self.assertEqual(observed, expected)
+        # Split into headers, which are checked against a literal string,
+        # and a body which is checked via JSON decoding.
+        observed = api_helper().split('\n\n', 1)
+        expected = ('HTTP/1.1 200 OK\n' +
+            'Content-Type: application/json; charset=utf-8')
+        self.assertEqual(observed[0], expected)
+        expected = [{"favorite_color": "Green"}]
+        self.assertEqual(json.loads(observed[1]), expected)
     
     def test_doubled_up_q(self):
         """Not harmful to specify q=... twice."""
