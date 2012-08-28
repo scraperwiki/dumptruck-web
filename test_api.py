@@ -13,7 +13,7 @@ except OSError:
     pass
 os.environ['HOME'] = JACK
 DB = os.path.join(JACK, 'dumptruck.db')
-SW_JSON = os.path.join(JACK, 'sw.json')
+SW_JSON = os.path.join(JACK, 'scraperwiki.json')
 
 def api_helper(*args, **kwargs):
     if 'boxhome' not in kwargs:
@@ -99,7 +99,7 @@ class TestCGI(unittest.TestCase):
 class TestAPI(unittest.TestCase):
     """API"""
     def _q(self, dbname, p, output_check=None, code_check=None):
-        """For testing sw.json database file configuration.  Runs some query on the
+        """For testing scraperwiki.json database file configuration.  Runs some query on the
         database *dbname*, using *p* as a parameter.  Normally the output will be
         inspected to see if it contains *p* but if *output_check* is specified, then that
         value will be checked for in the output instead.
@@ -155,22 +155,22 @@ class TestAPI(unittest.TestCase):
         self._q('scraperwiki.sqlite', 9804)
         
     def test_no_sw_json(self):
-        """Raises an error if there is no sw.json."""
+        """Raises an error if there is no scraperwiki.json."""
         os.system('rm -f ' + SW_JSON)
-        self._q(':memory:', 2938, output_check='No sw.json', code_check=500)
+        self._q(':memory:', 2938, output_check='No scraperwiki.json', code_check=500)
 
     def test_malformed_json(self):
-        """Raises an error if there is a malformed sw.json."""
+        """Raises an error if there is a malformed scraperwiki.json."""
         os.system("echo '{{{{{' >> " + SW_JSON)
-        self._q(':memory:', 293898879, output_check='Malformed sw.json')
+        self._q(':memory:', 293898879, output_check='Malformed scraperwiki.json')
 
     def test_no_database_attribute(self):
-        """Raises an error if there is a well-formed sw.json with no database attribute."""
+        """Raises an error if there is a well-formed scraperwiki.json with no database attribute."""
         os.system("echo '{}' > " + SW_JSON)
         self._q(':memory:', 29379, output_check='No \\"database\\" attribute')
 
     def test_report_if_database_does_not_exist(self):
-        """Raises an error if the database specified in sw.json doesn't exist."""
+        """Raises an error if the database specified in scraperwiki.json doesn't exist."""
 
         os.system('rm -f ' + os.path.join(JACK, '*'))
         os.system('cp fixtures/sw.json.scraperwiki.sqlite ' + SW_JSON)

@@ -150,25 +150,25 @@ def parse_query_string():
     return sql, box
 
 def get_database_name(boxhome, box):
-    """Use the database file specified by the "database" field in ~/sw.json."""
+    """Use the database file specified by the "database" field in ~/scraperwiki.json."""
 
-    path = os.path.join(boxhome, box, 'sw.json')
+    path = os.path.join(boxhome, box, 'scraperwiki.json')
 
     try:
         with open(path) as f:
             sw_json = f.read()
     except IOError:
-        raise QueryError('Error: No sw.json file', code=500)
+        raise QueryError('Error: No scraperwiki.json file', code=500)
 
     try:
         sw_data = json.loads(sw_json)
     except ValueError:
-        raise QueryError('Malformed sw.json file', code=500)
+        raise QueryError('Malformed scraperwiki.json file', code=500)
 
     try:
         dbname = os.path.join(boxhome, box, os.path.expanduser(sw_data['database']))
     except KeyError:
-        raise QueryError('No "database" attribute in sw.json', code=500)
+        raise QueryError('No "database" attribute in scraperwiki.json', code=500)
 
     return dbname
 
