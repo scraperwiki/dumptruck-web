@@ -1,3 +1,3 @@
 {
-  database: "scraperwiki.sqlite"
+  "database": "scraperwiki.sqlite"
 }

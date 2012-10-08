@@ -12,15 +12,36 @@ Install.
     apt-get install fcgiwrap nginx
 
 Configure the nginx site. (Try `/etc/nginx/sites-enabled/default`.)
-                                                  
+
     location / {                                               
-        fastcgi_param DOCUMENT_ROOT /var/www/;
-        fastcgi_param SCRIPT_NAME sqlite_api.py;
+      fastcgi_param DOCUMENT_ROOT /var/www/dumptruck-web/;
+      fastcgi_param SCRIPT_NAME dumptruck_web.py;
+      fastcgi_param SCRIPT_FILENAME /var/www/dumptruck-web/dumptruck_web.py;
+      fastcgi_pass unix:/var/run/fcgiwrap.socket;  
+      
+      # Fill in the gaps. This does not overwrite previous settings,
+      # so it goes last
+      include /etc/nginx/fastcgi_params;
+     }
+
+This depends on `/var/www/dumptruck_web.py` being a cgi script file that www-data
+can execute.
+ 
+If you're installing this as part of cobalt, the configuration is 
+
+    rewrite  ^\/([^\s/]+)\/sqlite\/?$  /$1/sqlite?box=$1;
+
+    location ~ ^\/([^\s/]+)\/sqlite\/?$ {
+        fastcgi_param DOCUMENT_ROOT /var/www/dumptruck-web/;
+        fastcgi_param SCRIPT_NAME dumptruck_web.py;
+        fastcgi_param SCRIPT_FILENAME /var/www/dumptruck-web/dumptruck_web.py;
+
+        # Fill in the gaps. This does not overwrite previous settings,
+        # so it goes last
+        include /etc/nginx/fastcgi_params;
         fastcgi_pass unix:/var/run/fcgiwrap.socket;
     }
 
-This depends on `/var/www/sqlite_api.py` being a cgi script file that www-data
-can execute.
 
 Specify some high number of processes in `/etc/init.d/fcgiwrap` like so.
 
@@ -45,6 +66,16 @@ An example (simple) script would be
     Hello world
     '''
 
+An API call looks like this,
+
+    /jack-in-the/sqlite?q=SELECT+foo+FROM+baz
+
+but the CGI script expects this,
+
+    /sqlite?q=SELECT+foo+FROM+baz&box=made-of-ticky-tacky
+
+so the Nginx needs to rewrite the URL.
+
 ### uWSGI
 Here's a configuration based on the
 [uWSGI quickstart](http://projects.unbit.it/uwsgi/wiki/Quickstart) 
@@ -61,7 +92,7 @@ Run this (preferably as a daemon).
 
     uwsgi \
       --plugins http,python \
-      --wsgi-file sqlite_api.py \
+      --wsgi-file foobar.py \
       --socket 127.0.0.1:3031 \
       --callable application \
       --processes 20
@@ -69,9 +100,7 @@ Run this (preferably as a daemon).
 Use some high number of processes because they block.
 
 We'll have to adjust the api script so that it works with uWSGI;
-`sqlite_api.py` is that.
-
-Add this to the nginx site. (Try `/etc/nginx/sites-enabled/default`.)
+once we do, add this to the nginx site. (Try `/etc/nginx/sites-enabled/default`.)
 
     location /path/to/sqlite {
         include uwsgi_params;
@@ -84,7 +113,7 @@ Restart nginx.
 
 Test
 
-    curl localhost/path/to/sqlite?q=SELECT+42+FROM+sqlite_master
+    curl localhost/path/to/sqlite?q=SELECT+42+FROM+sqlite_master&boxname=jack-in-the
 
 An example (simple) script would be
 
@@ -94,3 +123,18 @@ An example (simple) script would be
 
 ## Add later
 Gzip responses.
+
+## SQLite errors
+The SQLite errors are normally pretty good, so an api call with that raises a
+SQLite error normally displays the error messages. This includes
+
+* Locked databases
+* Ungrammatical SQL
+
+Some of these errors aren't great, like
+
+* Database that the user doesn't have permission to read
+
+We also treat some things as errors that SQLite doesn't:
+
+* Databases that don't exist

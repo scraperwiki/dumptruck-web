@@ -1,11 +1,46 @@
-import os
-import cgi
-import sqlite3
-import dumptruck
-import demjson
+#!/usr/bin/env python
 
-def authorizer_readonly(action_code, tname, cname, sql_location, trigger):
-    "SQLite authorize to prohibit destructive SQL commands"
+import cgi
+import json
+import os
+import sqlite3
+
+import dumptruck
+
+# For fastcgi at least, the HTTP status code must be specified
+# as a 'Status:' header.  See http://www.fastcgi.com/docs/faq.html#httpstatus
+HEADERS = '''HTTP/1.1 %(status)s
+Status: %(status)s
+Content-Type: application/json; charset=utf-8'''
+
+LONG_STATUS = {
+    200: '200 OK',
+    301: '301 Moved permanently',
+    302: '302 Found',
+    303: '303 See Other',
+    400: '400 Bad Request',
+    401: '401 Unauthorized',
+    403: '403 Forbidden',
+    404: '404 Not Found',
+    500: '500 ',
+}
+
+class QueryError(Exception):
+    """Exception during query processing."""
+    def __init__(self, msg, code, **k):
+        """Code which catches these exceptions, expects to find an HTTP Status code in
+        code.
+        """
+        self.code = code
+        super(QueryError, self).__init__(msg, **k)
+
+def _authorizer_readonly(action_code, tname, cname, sql_location, trigger):
+    """SQLite callback that we use to prohibit any SQL commands that could change a
+    database; effectively making it readonly.
+
+    Copied from scraperwiki.com sources.
+    """
+
     readonlyops = [
         sqlite3.SQLITE_SELECT,
         sqlite3.SQLITE_READ,
@@ -37,73 +72,105 @@ def authorizer_readonly(action_code, tname, cname, sql_location, trigger):
 
     return sqlite3.SQLITE_DENY
 
-def dumptruck_web(query, dbname):
+def execute_query(sql, dbname):
     """
-    Given an SQL query and a SQLitedatabase name, return an HTTP status code
+    Given an SQL query and a SQLite database name, return an HTTP status code
     and the JSON-encoded response from the database.
     """
     if os.path.isfile(dbname):
         # Check for the database file
-        dt = dumptruck.DumpTruck(dbname, adapt_and_convert = False)
-
-    else:
-        # Use a memory database if there is no dumptruck.db
-        dt = dumptruck.DumpTruck(':memory:')
-
-    dt.connection.set_authorizer(authorizer_readonly)
-
-    if "q" not in query:
-        data = u'Error: No query specified'
-        code = 400
-
-    else:
-        sql = query['q']
-
         try:
-            data = dt.execute(sql)
-
+            dt = dumptruck.DumpTruck(dbname, adapt_and_convert = False)
         except sqlite3.OperationalError, e:
-            data = u'SQL error: ' + e.message
-            code = 400
+            if e.message == 'unable to open database file':
+                data = e.message + ' (Check that the file exists and is readable by everyone.)'
+                code = 500
+                return code, data
+    else:
+        data = 'Error: database file does not exist.'
+        code = 500
+        return code, data
 
-        except sqlite3.DatabaseError, e:
-            if e.message == u"not authorized":
-                data = u'Error: Not authorized'
-                code = 403
-            else:
-                data = u'Database error: ' + e.message
-                code = 400
+    dt.connection.set_authorizer(_authorizer_readonly)
 
+    try:
+        data = dt.execute(sql)
+        code = 200
+    except sqlite3.OperationalError, e:
+        data = u'SQL error: ' + e.message
+        code = 400
+    except sqlite3.DatabaseError, e:
+        data = u'Database error: ' + e.message
+        if e.message == u"not authorized":
+            # Writes are not authorized.
+            code = 403
         else:
-            code = 200
+            code = 500
+    except Exception, e:
+        data = u'Error: ' + e.message
+        code = 500
 
-    return code, demjson.encode(data)
+    return code, data
 
-HEADERS = '''HTTP/1.1 %s
-Content-Type: application/json; charset=utf-8'''
-CODE_MAP = {
-    200: '200 OK',
-    301: '301 Moved permanently',
-    302: '302 Found',
-    303: '303 See Other',
-    400: '400 Bad Request',
-    401: '401 Unauthorized',
-    403: '403 Forbidden',
-    404: '404 Not Found',
-}
-def sqlite_api(dbname):
+def api(boxhome=os.path.join('/', 'home')):
     """
-    This CGI function takes the $QUERY_STRING and database name as input, so
-    you can create a SQLite HTTP API by importing and calling this function.
+    Implements a CGI interface for SQL queries to boxes.
 
     It takes a query string like
 
-        q=SELECT+foo+FROM+bar
+        q=SELECT+foo+FROM+bar&boxname=screwdriver
 
-    Currently, q the only parameter.
+    Currently, *q* and *boxname* are the only parameters.
     """
-    form = cgi.FieldStorage()
-    qs = {name: form[name].value for name in form.keys()}
-    code, body = dumptruck_web(qs, dbname)
-    headers = HEADERS % CODE_MAP[code]
+
+    try:
+        sql,box = parse_query_string()
+        dbname = get_database_name(boxhome, box)
+        code,body = execute_query(sql, dbname)
+    except QueryError as e:
+        code = e.code
+        body = e.message
+    body = json.dumps(body)
+
+    headers = HEADERS % dict(status=LONG_STATUS[code])
     return headers + '\n\n' + body + '\n'
+
+def parse_query_string():
+    """Return sql,box as a pair.  Extracted from the CGI parameters."""
+    form = cgi.FieldStorage()
+    qs = form.getlist('q')
+    boxs = form.getlist('box')
+    if len(qs) != 1:
+        raise QueryError('Error: exactly one q= parameter should be specified', code=400)
+    if len(boxs) != 1:
+        raise QueryError('Error: exactly one box= parameter should be specified', code=400)
+
+    sql = qs[0]
+    box = boxs[0]
+    return sql, box
+
+def get_database_name(boxhome, box):
+    """Use the database file specified by the "database" field in ~/scraperwiki.json."""
+
+    path = os.path.join(boxhome, box, 'scraperwiki.json')
+
+    try:
+        with open(path) as f:
+            sw_json = f.read()
+    except IOError:
+        raise QueryError('Error: No scraperwiki.json file', code=500)
+
+    try:
+        sw_data = json.loads(sw_json)
+    except ValueError:
+        raise QueryError('Malformed scraperwiki.json file', code=500)
+
+    try:
+        dbname = os.path.join(boxhome, box, os.path.expanduser(sw_data['database']))
+    except KeyError:
+        raise QueryError('No "database" attribute in scraperwiki.json', code=500)
+
+    return dbname
+
+if __name__ == '__main__':
+    print api()
