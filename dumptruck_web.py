@@ -44,7 +44,7 @@ def dumptruck_web(query, dbname):
     """
     if os.path.isfile(dbname):
         # Check for the database file
-        dt = dumptruck.DumpTruck(dbname)
+        dt = dumptruck.DumpTruck(dbname, adapt_and_convert = False)
 
     else:
         # Use a memory database if there is no dumptruck.db
