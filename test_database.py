@@ -18,6 +18,14 @@ class Database(unittest.TestCase):
 
         self.dt = dumptruck.DumpTruck(dbname=DB, adapt_and_convert = False)
 
+class TestNoConverters(Database):
+    def test_few_converters(self):
+        self.assertLess(len(self.dt.sqlite3.converters), 5)
+
+    def test_lambdas(self):
+        for f in self.dt.sqlite3.converters.values():
+            self.assertEqual(f.__name__, '<lambda>')
+
 class TestQueries(Database):
     def test_valid_query(self):
         """Valid query works."""
