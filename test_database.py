@@ -16,7 +16,7 @@ class Database(unittest.TestCase):
         except OSError:
             pass
 
-        self.dt = dumptruck.DumpTruck(dbname=DB)
+        self.dt = dumptruck.DumpTruck(dbname=DB, adapt_and_convert = False)
 
 class TestQueries(Database):
     def test_valid_query(self):
