@@ -80,7 +80,7 @@ def execute_query(sql, dbname):
     if os.path.isfile(dbname):
         # Check for the database file
         try:
-            dt = dumptruck.DumpTruck(dbname)
+            dt = dumptruck.DumpTruck(dbname, adapt_and_convert = False)
         except sqlite3.OperationalError, e:
             if e.message == 'unable to open database file':
                 data = e.message + ' (Check that the file exists and is readable by everyone.)'
