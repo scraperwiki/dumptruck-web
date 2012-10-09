@@ -34,7 +34,16 @@ class TestQueries(Database):
         self.assertEqual(observedData, u'SQL error: near "chainsaw": syntax error')
         self.assertEqual(observedCode, 400)
 
-    def test_special_type(self):
+    def test_special_type_list(self):
+        """Adapters and converters should not be enabled."""
+        self.dt.execute('CREATE TABLE pork_sales (week json);')
+        self.dt.execute("INSERT INTO pork_sales VALUES ('[12,3,4]')")
+        observedCode, observedData = execute_query('SELECT week FROM pork_sales', DB)
+
+        self.assertListEqual(observedData, [{u"week": u"[12,3,4]"}])
+        self.assertEqual(observedCode, 200)
+
+    def test_special_type_date(self):
         """Adapters and converters should not be enabled."""
         self.dt.execute('CREATE TABLE pork_sales (week date);')
         self.dt.execute("INSERT INTO pork_sales VALUES ('2012-10-08')")
