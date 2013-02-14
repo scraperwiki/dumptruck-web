@@ -2,6 +2,8 @@
 # run with nosetests
 # Test the metadata API
 
+from nose.tools import *
+
 def testMeta1():
     endpoint = "/sql/meta/"
     result = get_json_from_query()
@@ -10,9 +12,11 @@ def testMeta1():
     {
       "table": {
         "first_table_name": {
+          "type": "table",
           "column_names": ["column1", "column2"]
         },
-        "another_table": {
+        "a_view": {
+          "type": "view",
           "column_names": ["blah blah", "blah"]
         },
       },
@@ -25,8 +29,9 @@ def testMeta1():
     """
     assert result
     assert result['database_type']
-    assert result['table']['test1']
     assert result['table']
+    assert result['table']['test1']
+    assert_equal(result['table']['test1']['type'], 'table')
     column_names = result['table']['test1']['column_names']
     assert column_names
     assert "column1" in column_names
@@ -36,6 +41,7 @@ def get_json_from_query():
     return {
       "table": {
         "test1": {
+          "type": "table",
           "column_names": ["column1", "column2"]
         },
         "another_table": {
