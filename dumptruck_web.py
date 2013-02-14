@@ -9,6 +9,7 @@ import dumptruck
 
 # For fastcgi at least, the HTTP status code must be specified
 # as a 'Status:' header.  See http://www.fastcgi.com/docs/faq.html#httpstatus
+# Template used by headers_for_status function
 HEADERS = '''HTTP/1.1 %(status)s
 Status: %(status)s
 Content-Type: application/json; charset=utf-8'''
@@ -24,6 +25,9 @@ LONG_STATUS = {
     404: '404 Not Found',
     500: '500 ',
 }
+
+def headers_for_status(code):
+    return HEADERS % dict(status=LONG_STATUS[code])
 
 class QueryError(Exception):
     """Exception during query processing."""
@@ -72,10 +76,15 @@ def _authorizer_readonly(action_code, tname, cname, sql_location, trigger):
 
     return sqlite3.SQLITE_DENY
 
-def execute_query(sql, dbname):
-    """
-    Given an SQL query and a SQLite database name, return an HTTP status code
-    and the JSON-encoded response from the database.
+class NotOK(Exception):
+    """Some problem meaning we immediately want to return a
+    status code that is not 200."""
+    def __init__(self, code, body):
+        self.code = code
+        self.body = body
+
+def open_dumptruck(dbname):
+    """Returns read-only dumptruck object, or raises an Exception.
     """
     if os.path.isfile(dbname):
         # Check for the database file
@@ -83,15 +92,26 @@ def execute_query(sql, dbname):
             dt = dumptruck.DumpTruck(dbname, adapt_and_convert = False)
         except sqlite3.OperationalError, e:
             if e.message == 'unable to open database file':
-                data = e.message + ' (Check that the file exists and is readable by everyone.)'
+                msg = e.message + ' (Check that the file exists and is readable by everyone.)'
                 code = 500
-                return code, data
+                raise NotOK(code, msg)
     else:
-        data = 'Error: database file does not exist.'
+        msg = 'Error: database file does not exist.'
         code = 500
-        return code, data
+        raise NotOK(code, msg)
 
     dt.connection.set_authorizer(_authorizer_readonly)
+    return dt
+
+def execute_query(sql, dbname):
+    """
+    Given an SQL query and a SQLite database name, return an HTTP status code
+    and the JSON-encoded response from the database.
+    """
+    try:
+        dt = open_dumptruck(dbname)
+    except NotOK as e:
+        return e.code, e.body
 
     try:
         data = dt.execute(sql)
@@ -132,7 +152,34 @@ def api(boxhome=os.path.join('/', 'home')):
         body = e.message
     body = json.dumps(body)
 
-    headers = HEADERS % dict(status=LONG_STATUS[code])
+    headers = headers_for_status(code)
+    return headers + '\n\n' + body + '\n'
+
+def meta(boxhome=os.path.join('/', 'home')):
+    """Implements a CGI interface for the meta information
+    about SQL(ite) databases.
+    """
+    form = cgi.FieldStorage()
+    boxs = form.getlist('box')
+    if len(boxs) != 1:
+        raise QueryError('Error: exactly one box= parameter should be specified', code=400)
+    box = boxs[0]
+    dbname = get_database_name(boxhome, box)
+    
+    try:
+        dt = open_dumptruck(dbname)
+        res = {}
+        res['database_type'] = 'sqlite3'
+        res['table'] = {}
+        for table_name in dt.tables():
+            # :todo: column names
+            res['table'][table_name] = { type:"table" }
+        body = json.dumps(res)
+        code = 200
+    except NotOK as e:
+        code = e.code
+        body = e.body
+    headers = headers_for_status(code)
     return headers + '\n\n' + body + '\n'
 
 def parse_query_string():

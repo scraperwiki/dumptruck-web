@@ -2,9 +2,11 @@
 
 import os
 import json
+from nose.tools import *
 import unittest
+
 import dumptruck
-from dumptruck_web import api
+from dumptruck_web import api, meta
 
 BOXHOME = os.path.join('/', 'tmp', 'boxtests') 
 JACK = os.path.join(BOXHOME, 'jack-in-a')
@@ -21,6 +23,12 @@ def api_helper(*args, **kwargs):
     if 'boxhome' not in kwargs:
         kwargs['boxhome'] = BOXHOME
     return api(*args, **kwargs)
+
+def meta_helper(*args, **kwargs):
+    if 'boxhome' not in kwargs:
+        kwargs['boxhome'] = BOXHOME
+    return meta(*args, **kwargs)
+
 
 class TestCGI(unittest.TestCase):
     """CGI"""
@@ -69,14 +77,14 @@ class TestCGI(unittest.TestCase):
         self.assertEqual(observed[0], expected)
         expected = [{"favorite_color": "Green"}]
         self.assertEqual(json.loads(observed[1]), expected)
-    
+
     def test_doubled_up_q(self):
         """Not harmful to specify q=... twice."""
         os.environ['QUERY_STRING'] = 'q=SELECT+7&q=SELECT+3&box=jack-in-a'
         observed = api_helper().split('\n')[0]
         expected = 'HTTP/1.1 400 Bad Request'
         self.assertEqual(observed, expected)
-    
+
     def test_doubled_up_box(self):
         """Not harmful to specify box=... twice."""
         os.environ['QUERY_STRING'] = 'q=SELECT+7&box=jack-in-a&box=bob'
@@ -97,6 +105,55 @@ class TestCGI(unittest.TestCase):
             '',
         ]
         self.assertListEqual(observed, expected)
+
+    def testMeta(self):
+        """Test the metadata endpoint."""
+
+        os.system('cp fixtures/sw.json.dumptruck.db ' + SW_JSON)
+
+        os.environ['QUERY_STRING'] = 'box=jack-in-a'
+        header,body =  meta_helper().split('\n\n', 1)
+        expected = ('HTTP/1.1 200 OK\n' +
+            'Status: 200 OK\n' +
+            'Content-Type: application/json; charset=utf-8')
+        self.assertEqual(header, expected)
+        # we expect an empty database.
+        expected = {"table": {}, "database_type": "sqlite3"}
+        self.assertEqual(json.loads(body), expected)
+
+        return True # :todo: implement the rest of these tests:
+        result = json.loads(body)
+    
+        # Returns something like:
+        """
+        {
+          "table": {
+            "first_table_name": {
+              "type": "table",
+              "column_names": ["column1", "column2"]
+            },
+            "a_view": {
+              "type": "view",
+              "column_names": ["blah blah", "blah"]
+            },
+          },
+          "database_type": "sqlite"
+        }
+        # With future expansion for columns that are typed:
+            "columns": [{"name":"column1","type":"Number"}]
+        # and tables with unique keys.
+            "unique_keys": ["col1", "col2"}
+        """
+        assert result
+        assert result['database_type']
+        assert result['table']
+        assert result['table']['test1']
+        assert_equal(result['table']['test1']['type'], 'table')
+        column_names = result['table']['test1']['column_names']
+        assert column_names
+        assert "column1" in column_names
+        assert "column2" in column_names
+
 
 class TestAPI(unittest.TestCase):
     """API"""
