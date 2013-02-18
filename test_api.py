@@ -140,6 +140,7 @@ class TestCGI(unittest.TestCase):
         # check column_names are listed:
         n = jbody['table']['newtable']
         self.assertIn("column_names", n)
+        self.assertEqual(n['column_names'], ["akey"])
 
         return True
     
@@ -163,16 +164,6 @@ class TestCGI(unittest.TestCase):
         # and tables with unique keys.
             "unique_keys": ["col1", "col2"}
         """
-        assert result
-        assert result['database_type']
-        assert result['table']
-        assert result['table']['test1']
-        assert_equal(result['table']['test1']['type'], 'table')
-        column_names = result['table']['test1']['column_names']
-        assert column_names
-        assert "column1" in column_names
-        assert "column2" in column_names
-
 
 class TestAPI(unittest.TestCase):
     """API"""
