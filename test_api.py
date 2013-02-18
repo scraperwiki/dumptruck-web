@@ -8,7 +8,9 @@ import unittest
 import dumptruck
 from dumptruck_web import api, meta
 
+# Directory in which boxes are created.
 BOXHOME = os.path.join('/', 'tmp', 'boxtests') 
+# The directory for a particular box.
 JACK = os.path.join(BOXHOME, 'jack-in-a')
 try:
     os.makedirs(JACK)
@@ -158,9 +160,10 @@ class TestCGI(unittest.TestCase):
 class TestAPI(unittest.TestCase):
     """API"""
     def _q(self, dbname, p, output_check=None, code_check=None):
-        """For testing box.json database file configuration.  Runs some query on the
-        database *dbname*, using *p* as a parameter.  Normally the output will be
-        inspected to see if it contains *p* but if *output_check* is specified, then that
+        """For testing box.json database file configuration.  Runs
+        some query on the database *dbname*, using *p* as a parameter.
+        Normally the output will be inspected to see if it contains *p*
+        but if *output_check* is specified, then that
         value will be checked for in the output instead.
 
         *code_check* is used to check the status code.
