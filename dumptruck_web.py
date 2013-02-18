@@ -173,7 +173,7 @@ def meta(boxhome=os.path.join('/', 'home')):
         res['table'] = {}
         for table_name in dt.tables():
             # :todo: column names
-            res['table'][table_name] = { type:"table" }
+            res['table'][table_name] = { "type": "table" }
         body = json.dumps(res)
         code = 200
     except NotOK as e:

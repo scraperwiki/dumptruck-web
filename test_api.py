@@ -123,8 +123,19 @@ class TestCGI(unittest.TestCase):
         expected = {"table": {}, "database_type": "sqlite3"}
         self.assertEqual(json.loads(body), expected)
 
-        return True # :todo: implement the rest of these tests:
-        result = json.loads(body)
+    def testMeta2(self):
+        """More meta tests."""
+
+        os.system('cp fixtures/sw.json.dumptruck.db ' + SW_JSON)
+        os.environ['QUERY_STRING'] = 'box=jack-in-a'
+        self.dt.insert({'akey': 'avalue'}, "newtable")
+        os.environ['QUERY_STRING'] = 'box=jack-in-a'
+        header,body =  meta_helper().split('\n\n', 1)
+        jbody = json.loads(body)
+        self.assertIn("newtable", jbody['table'])
+        self.assertEqual(jbody['table']['newtable']['type'], "table")
+
+        return True
     
         # Returns something like:
         """
