@@ -127,24 +127,8 @@ class TestCGI(unittest.TestCase):
         """The table is listed in the metadata."""
 
         os.system('cp fixtures/sw.json.dumptruck.db ' + SW_JSON)
-        os.environ['QUERY_STRING'] = 'box=jack-in-a'
-        self.dt.insert({'akey': 'avalue'}, "newtable")
-        os.environ['QUERY_STRING'] = 'box=jack-in-a'
-        header,body =  meta_helper().split('\n\n', 1)
-        jbody = json.loads(body)
 
-        # check table is listed
-        self.assertIn("newtable", jbody['table'])
-        self.assertEqual(jbody['table']['newtable']['type'], "table")
-
-        # check column_names are listed:
-        n = jbody['table']['newtable']
-        self.assertIn("column_names", n)
-        self.assertEqual(n['column_names'], ["akey"])
-
-        return True
-    
-        # Returns something like:
+        # The sql/meta endpoint returns something like:
         """
         {
           "table": {
@@ -164,6 +148,21 @@ class TestCGI(unittest.TestCase):
         # and tables with unique keys.
             "unique_keys": ["col1", "col2"}
         """
+
+        os.environ['QUERY_STRING'] = 'box=jack-in-a'
+        self.dt.insert({'akey': 'avalue'}, "newtable")
+        os.environ['QUERY_STRING'] = 'box=jack-in-a'
+        header,body =  meta_helper().split('\n\n', 1)
+        jbody = json.loads(body)
+
+        # check table is listed
+        self.assertIn("newtable", jbody['table'])
+        self.assertEqual(jbody['table']['newtable']['type'], "table")
+
+        # check column_names are listed:
+        n = jbody['table']['newtable']
+        self.assertIn("column_names", n)
+        self.assertEqual(n['column_names'], ["akey"])
 
 class TestAPI(unittest.TestCase):
     """API"""
