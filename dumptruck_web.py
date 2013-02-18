@@ -172,8 +172,9 @@ def meta(boxhome=os.path.join('/', 'home')):
         res['database_type'] = 'sqlite3'
         res['table'] = {}
         for table_name in dt.tables():
-            # :todo: column names
-            res['table'][table_name] = { "type": "table" }
+            d = { "type": "table" }
+            d['column_names'] = list(dt.column_names(table_name))
+            res['table'][table_name] = d
         body = json.dumps(res)
         code = 200
     except NotOK as e:

@@ -108,7 +108,7 @@ class TestCGI(unittest.TestCase):
         ]
         self.assertListEqual(observed, expected)
 
-    def testMeta(self):
+    def testMetaSimple(self):
         """Test the metadata endpoint."""
 
         os.system('cp fixtures/sw.json.dumptruck.db ' + SW_JSON)
@@ -123,8 +123,8 @@ class TestCGI(unittest.TestCase):
         expected = {"table": {}, "database_type": "sqlite3"}
         self.assertEqual(json.loads(body), expected)
 
-    def testMeta2(self):
-        """More meta tests."""
+    def testMetaTableListed(self):
+        """The table is listed in the metadata."""
 
         os.system('cp fixtures/sw.json.dumptruck.db ' + SW_JSON)
         os.environ['QUERY_STRING'] = 'box=jack-in-a'
@@ -132,8 +132,14 @@ class TestCGI(unittest.TestCase):
         os.environ['QUERY_STRING'] = 'box=jack-in-a'
         header,body =  meta_helper().split('\n\n', 1)
         jbody = json.loads(body)
+
+        # check table is listed
         self.assertIn("newtable", jbody['table'])
         self.assertEqual(jbody['table']['newtable']['type'], "table")
+
+        # check column_names are listed:
+        n = jbody['table']['newtable']
+        self.assertIn("column_names", n)
 
         return True
     
