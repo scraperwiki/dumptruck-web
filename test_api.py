@@ -151,6 +151,9 @@ class TestCGI(unittest.TestCase):
 
         os.environ['QUERY_STRING'] = 'box=jack-in-a'
         self.dt.insert({'akey': 'avalue'}, "newtable")
+        self.dt.execute(
+          "CREATE VIEW aview AS SELECT 1 as cola, 2 as colb",
+          commit=False)
         os.environ['QUERY_STRING'] = 'box=jack-in-a'
         header,body =  meta_helper().split('\n\n', 1)
         jbody = json.loads(body)
@@ -163,6 +166,15 @@ class TestCGI(unittest.TestCase):
         n = jbody['table']['newtable']
         self.assertIn("column_names", n)
         self.assertEqual(n['column_names'], ["akey"])
+
+        # check view is listed
+        self.assertIn("aview", jbody['table'])
+        self.assertEqual(jbody['table']['aview']['type'], "view")
+
+        # check column_names are listed:
+        n = jbody['table']['aview']
+        self.assertIn("column_names", n)
+        self.assertEqual(n['column_names'], ["cola", "colb"])
 
 class TestAPI(unittest.TestCase):
     """API"""
