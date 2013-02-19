@@ -223,4 +223,16 @@ def get_database_name(boxhome, box):
     return dbname
 
 if __name__ == '__main__':
-    print api()
+    form = cgi.FieldStorage()
+    methods = form.getlist('method')
+    if len(methods) != 1:
+        print '"Error: exactly one method= parameter should be specified"'
+
+    method = methods[0]
+
+    if method == 'sql':
+        print api()
+    elif method == 'meta':
+        print meta()
+    else:
+        print 'Invalid method'
