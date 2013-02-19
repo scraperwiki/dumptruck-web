@@ -120,7 +120,7 @@ class TestCGI(unittest.TestCase):
             'Content-Type: application/json; charset=utf-8')
         self.assertEqual(header, expected)
         # we expect an empty database.
-        expected = {"table": {}, "database_type": "sqlite3"}
+        expected = {"table": {}, "databaseType": "sqlite3"}
         self.assertEqual(json.loads(body), expected)
 
     def testMetaTableListed(self):
@@ -134,19 +134,19 @@ class TestCGI(unittest.TestCase):
           "table": {
             "first_table_name": {
               "type": "table",
-              "column_names": ["column1", "column2"]
+              "columnNames": ["column1", "column2"]
             },
             "a_view": {
               "type": "view",
-              "column_names": ["blah blah", "blah"]
+              "columnNames": ["blah blah", "blah"]
             },
           },
-          "database_type": "sqlite"
+          "databaseType": "sqlite"
         }
         # With future expansion for columns that are typed:
             "columns": [{"name":"column1","type":"Number"}]
         # and tables with unique keys.
-            "unique_keys": ["col1", "col2"}
+            "uniqueKeys": ["col1", "col2"}
         """
 
         os.environ['QUERY_STRING'] = 'box=jack-in-a'
@@ -164,8 +164,8 @@ class TestCGI(unittest.TestCase):
 
         # check column_names are listed:
         n = jbody['table']['newtable']
-        self.assertIn("column_names", n)
-        self.assertEqual(n['column_names'], ["akey"])
+        self.assertIn("columnNames", n)
+        self.assertEqual(n['columnNames'], ["akey"])
 
         # check view is listed
         self.assertIn("aview", jbody['table'])
@@ -173,8 +173,8 @@ class TestCGI(unittest.TestCase):
 
         # check column_names are listed:
         n = jbody['table']['aview']
-        self.assertIn("column_names", n)
-        self.assertEqual(n['column_names'], ["cola", "colb"])
+        self.assertIn("columnNames", n)
+        self.assertEqual(n['columnNames'], ["cola", "colb"])
 
 class TestAPI(unittest.TestCase):
     """API"""

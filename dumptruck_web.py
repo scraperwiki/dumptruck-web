@@ -169,11 +169,11 @@ def meta(boxhome=os.path.join('/', 'home')):
     try:
         dt = open_dumptruck(dbname)
         res = {}
-        res['database_type'] = 'sqlite3'
+        res['databaseType'] = 'sqlite3'
         res['table'] = {}
         for name, type in dt.tablesAndViews():
             d = { "type": type }
-            d['column_names'] = list(dt.column_names(name))
+            d['columnNames'] = list(dt.column_names(name))
             res['table'][name] = d
         body = json.dumps(res)
         code = 200
