@@ -132,7 +132,7 @@ def execute_query(sql, dbname):
 
     return code, data
 
-def api(boxhome=os.path.join('/', 'home')):
+def sql(boxhome=os.path.join('/', 'home')):
     """
     Implements a CGI interface for SQL queries to boxes.
 
@@ -231,7 +231,7 @@ if __name__ == '__main__':
     method = methods[0]
 
     if method == 'sql':
-        print api()
+        print sql()
     elif method == 'meta':
         print meta()
     else:

@@ -6,7 +6,7 @@ from nose.tools import *
 import unittest
 
 import dumptruck
-from dumptruck_web import api, meta
+from dumptruck_web import sql, meta
 
 # Directory in which boxes are created.
 BOXHOME = os.path.join('/', 'tmp', 'boxtests') 
@@ -21,10 +21,10 @@ os.environ['HOME'] = JACK
 DB = os.path.join(JACK, 'dumptruck.db')
 SW_JSON = os.path.join(JACK, 'box.json')
 
-def api_helper(*args, **kwargs):
+def sql_helper(*args, **kwargs):
     if 'boxhome' not in kwargs:
         kwargs['boxhome'] = BOXHOME
-    return api(*args, **kwargs)
+    return sql(*args, **kwargs)
 
 def meta_helper(*args, **kwargs):
     if 'boxhome' not in kwargs:
@@ -52,7 +52,7 @@ class TestCGI(unittest.TestCase):
         old_fn = dumptruck_web.execute_query
         dumptruck_web.execute_query = lambda q, d: (400, 'Blah blah blah')
         try:
-            observed = api_helper().split('\n')[0]
+            observed = sql_helper().split('\n')[0]
         finally:
             dumptruck_web.execute_query = old_fn
         expected = 'HTTP/1.1 400 Bad Request'
@@ -61,7 +61,7 @@ class TestCGI(unittest.TestCase):
     def test_cgi_400_real(self):
         """Invalid CGI query parameters give Bad Status Code."""
         os.environ['QUERY_STRING'] = 'qqqq=SELECT+favorite_color+FROM+person&box=jack-in-a'
-        observed = api_helper().split('\n')[0]
+        observed = sql_helper().split('\n')[0]
         expected = 'HTTP/1.1 400 Bad Request'
         self.assertEqual(observed, expected)
 
@@ -72,7 +72,7 @@ class TestCGI(unittest.TestCase):
         os.environ['QUERY_STRING'] = 'q=SELECT+favorite_color+FROM+person&box=jack-in-a'
         # Split into headers, which are checked against a literal string,
         # and a body which is checked via JSON decoding.
-        observed = api_helper().split('\n\n', 1)
+        observed = sql_helper().split('\n\n', 1)
         expected = ('HTTP/1.1 200 OK\n' +
             'Status: 200 OK\n' +
             'Content-Type: application/json; charset=utf-8')
@@ -83,21 +83,21 @@ class TestCGI(unittest.TestCase):
     def test_doubled_up_q(self):
         """Not harmful to specify q=... twice."""
         os.environ['QUERY_STRING'] = 'q=SELECT+7&q=SELECT+3&box=jack-in-a'
-        observed = api_helper().split('\n')[0]
+        observed = sql_helper().split('\n')[0]
         expected = 'HTTP/1.1 400 Bad Request'
         self.assertEqual(observed, expected)
 
     def test_doubled_up_box(self):
         """Not harmful to specify box=... twice."""
         os.environ['QUERY_STRING'] = 'q=SELECT+7&box=jack-in-a&box=bob'
-        observed = api_helper().split('\n')[0]
+        observed = sql_helper().split('\n')[0]
         expected = 'HTTP/1.1 400 Bad Request'
         self.assertEqual(observed, expected)
 
     def test_http(self):
         """A complete example, including HTTP response headers."""
         os.environ['QUERY_STRING'] = 'q=SELECT+*+FROM+sqlite_master+LIMIT+0&box=jack-in-a'
-        observed = api_helper().split('\n')
+        observed = sql_helper().split('\n')
         expected = [
             'HTTP/1.1 200 OK',
             'Status: 200 OK',
@@ -191,7 +191,7 @@ class TestAPI(unittest.TestCase):
 
         os.environ['QUERY_STRING']='q=SELECT+p+FROM+bacon&box=jack-in-a'
         os.environ['REQUEST_METHOD'] = 'GET'
-        http = api_helper()
+        http = sql_helper()
 
         if output_check:
             self.assertIn(unicode(output_check), http)
@@ -244,7 +244,7 @@ class TestAPI(unittest.TestCase):
         os.system('rm -f ' + os.path.join(JACK, '*'))
         os.system('cp fixtures/sw.json.scraperwiki.sqlite ' + SW_JSON)
         os.environ['QUERY_STRING'] = 'q=SELECT+favorite_color+FROM+person&box=jack-in-a'
-        http = api_helper()
+        http = sql_helper()
         self.assertIn('500', http.split('\n')[0])
         self.assertIn('Error: database file does not exist', http)
 
@@ -255,7 +255,7 @@ class TestAPI(unittest.TestCase):
         os.system('cp fixtures/sw.json.scraperwiki.sqlite ' + SW_JSON)
         os.system('touch ' + dbname)
         os.system('chmod 000 ' + dbname)
-        http = api_helper()
+        http = sql_helper()
         self.assertIn(u'(Check that the file exists and is readable by everyone.)', http)
         os.system('chmod 600 ' + dbname)
         os.system('rm -f ' + dbname)
