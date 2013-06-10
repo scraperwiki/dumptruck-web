@@ -132,7 +132,7 @@ def execute_query(sql, dbname):
 
     return code, data
 
-def sql(boxhome=os.path.join('/', 'home')):
+def sql(boxhome=os.path.join(os.environ['CO_STORAGE_DIR'], '/', 'home')):
     """
     Implements a CGI interface for SQL queries to boxes.
 
@@ -155,7 +155,7 @@ def sql(boxhome=os.path.join('/', 'home')):
     headers = headers_for_status(code)
     return headers + '\n\n' + body + '\n'
 
-def meta(boxhome=os.path.join('/', 'home')):
+def metha(boxhome=os.path.join(os.environ['CO_STORAGE_DIR'], '/', 'home')):
     """Implements a CGI interface for the meta information
     about SQL(ite) databases.
     """
@@ -165,7 +165,7 @@ def meta(boxhome=os.path.join('/', 'home')):
         raise QueryError('Error: exactly one box= parameter should be specified', code=400)
     box = boxs[0]
     dbname = get_database_name(boxhome, box)
-    
+
     try:
         dt = open_dumptruck(dbname)
         res = {}
