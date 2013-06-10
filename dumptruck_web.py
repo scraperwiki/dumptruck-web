@@ -132,7 +132,7 @@ def execute_query(sql, dbname):
 
     return code, data
 
-def sql(boxhome=os.path.join(os.environ['CO_STORAGE_DIR'], '/', 'home')):
+def sql(boxhome=os.path.join('/', '%s/home' % os.environ['CO_STORAGE_DIR'])):
     """
     Implements a CGI interface for SQL queries to boxes.
 
@@ -155,7 +155,7 @@ def sql(boxhome=os.path.join(os.environ['CO_STORAGE_DIR'], '/', 'home')):
     headers = headers_for_status(code)
     return headers + '\n\n' + body + '\n'
 
-def meta(boxhome=os.path.join(os.environ['CO_STORAGE_DIR'], '/', 'home')):
+def meta(boxhome=os.path.join('/', '%s/home' % os.environ['CO_STORAGE_DIR'])):
     """Implements a CGI interface for the meta information
     about SQL(ite) databases.
     """
