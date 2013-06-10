@@ -155,7 +155,7 @@ def sql(boxhome=os.path.join(os.environ['CO_STORAGE_DIR'], '/', 'home')):
     headers = headers_for_status(code)
     return headers + '\n\n' + body + '\n'
 
-def metha(boxhome=os.path.join(os.environ['CO_STORAGE_DIR'], '/', 'home')):
+def meta(boxhome=os.path.join(os.environ['CO_STORAGE_DIR'], '/', 'home')):
     """Implements a CGI interface for the meta information
     about SQL(ite) databases.
     """
