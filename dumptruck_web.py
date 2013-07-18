@@ -106,7 +106,7 @@ def open_dumptruck(dbname):
 def execute_query(sql, dbname):
     """
     Given an SQL query and a SQLite database name, return an HTTP status code
-    and the JSON-encoded response from the database.
+    and the response from the database.
     """
     try:
         dt = open_dumptruck(dbname)
