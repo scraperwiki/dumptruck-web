@@ -99,8 +99,9 @@ def open_dumptruck(dbname):
                 code = 500
                 raise NotOK(code, msg)
     else:
-        msg = 'Error: database file does not exist.'
-        code = 500
+        msg = json.dumps({"error": "database file does not exist.",
+            })
+        code = 404
         raise NotOK(code, msg)
 
     dt.connection.set_authorizer(_authorizer_readonly)
@@ -181,8 +182,16 @@ def meta(boxhome=os.path.join('/', '%s/home' % os.environ['CO_STORAGE_DIR'])):
         body = json.dumps(res)
         code = 200
     except NotOK as e:
-        code = e.code
-        body = e.body
+        if e.code == 404:
+            # database not found is not an error for the meta endpoint
+            code = 200
+            body = json.dumps({"databaseType": "none",
+                "table": {}
+                })
+        else:
+            code = e.code
+            body = e.body
+
     headers = headers_for_status(code)
     return headers + '\n\n' + body + '\n'
 

@@ -123,6 +123,22 @@ class TestCGI(unittest.TestCase):
         expected = {"table": {}, "databaseType": "sqlite3"}
         self.assertEqual(json.loads(body), expected)
 
+    def testMetaNotExist(self):
+        """Test that when the database file doesn't exist
+        the metadata endpoint still returns something sensible."""
+
+        # os.system('cp fixtures/sw.json.dumptruck.db ' + SW_JSON)
+
+        os.environ['QUERY_STRING'] = 'box=jack-in-a'
+        header,body =  meta_helper().split('\n\n', 1)
+        expected = ('HTTP/1.1 200 OK\n' +
+            'Status: 200 OK\n' +
+            'Content-Type: application/json; charset=utf-8')
+        self.assertEqual(header, expected)
+        # we expect an empty database.
+        expected = {"table": {}, "databaseType": "none"}
+        # self.assertEqual(json.loads(body), expected)
+
     def testMetaTableListed(self):
         """The table is listed in the metadata."""
 
@@ -257,8 +273,8 @@ class TestAPI(unittest.TestCase):
         os.system('cp fixtures/sw.json.scraperwiki.sqlite ' + SW_JSON)
         os.environ['QUERY_STRING'] = 'q=SELECT+favorite_color+FROM+person&box=jack-in-a'
         http = sql_helper()
-        self.assertIn('500', http.split('\n')[0])
-        self.assertIn('Error: database file does not exist', http)
+        self.assertIn('404', http.split('\n')[0])
+        self.assertIn('database file does not exist', http)
 
     def test_permissions_error(self):
         """Raises an error if access to the database is not permitted."""
