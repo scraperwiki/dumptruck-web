@@ -18,14 +18,6 @@ class Database(unittest.TestCase):
 
         self.dt = dumptruck.DumpTruck(dbname=DB, adapt_and_convert = False)
 
-class TestNoConverters(Database):
-    def test_few_converters(self):
-        self.assertLess(len(self.dt.sqlite3.converters), 5)
-
-    def test_lambdas(self):
-        for f in self.dt.sqlite3.converters.values():
-            self.assertEqual(f.__name__, '<lambda>')
-
 class TestQueries(Database):
     def test_valid_query(self):
         """Valid query works."""
@@ -41,15 +33,6 @@ class TestQueries(Database):
 
         self.assertEqual(observedData, u'SQL error: near "chainsaw": syntax error')
         self.assertEqual(observedCode, 400)
-
-    def test_special_type_list(self):
-        """Adapters and converters should not be enabled."""
-        self.dt.execute('CREATE TABLE pork_sales (week json);')
-        self.dt.execute("INSERT INTO pork_sales VALUES ('[12,3,4]')")
-        observedCode, observedData = execute_query('SELECT week FROM pork_sales', DB)
-
-        self.assertListEqual(observedData, [{u"week": u"[12,3,4]"}])
-        self.assertEqual(observedCode, 200)
 
     def test_special_type_date(self):
         """Adapters and converters should not be enabled."""
