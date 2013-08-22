@@ -26,6 +26,9 @@ LONG_STATUS = {
     500: '500 ',
 }
 
+if 'CO_STORAGE_DIR' not in os.environ:
+    os.environ['CO_STORAGE_DIR'] = ''
+
 def headers_for_status(code):
     return HEADERS % dict(status=LONG_STATUS[code])
 
