@@ -99,8 +99,7 @@ def open_dumptruck(dbname):
                 code = 500
                 raise NotOK(code, msg)
     else:
-        msg = json.dumps({"error": "database file does not exist.",
-            })
+        msg = {"error": "database file does not exist."}
         code = 404
         raise NotOK(code, msg)
 

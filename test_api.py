@@ -123,6 +123,28 @@ class TestCGI(unittest.TestCase):
         expected = {"table": {}, "databaseType": "sqlite3"}
         self.assertEqual(json.loads(body), expected)
 
+    def testNotExist(self):
+        """Test that when the database file doesn't exist
+        the sql endpoint has statusCode 404."""
+
+        try:
+            os.remove(DB)
+        except OSError:
+            pass
+
+        # os.system('cp fixtures/sw.json.dumptruck.db ' + SW_JSON)
+
+        os.environ['QUERY_STRING'] = 'box=jack-in-a&q=SELECT*FROM+sqlite_master'
+        header,body =  sql_helper().split('\n\n', 1)
+
+        expected = ('HTTP/1.1 404 Not Found\n' +
+            'Status: 404 Not Found\n' +
+            'Content-Type: application/json; charset=utf-8')
+        self.assertEqual(header, expected)
+        # The body should be a JSON object with an 'error' key.
+        bodyJSON = json.loads(body)
+        self.assertIn('error', bodyJSON.keys())
+
     def testMetaNotExist(self):
         """Test that when the database file doesn't exist
         the metadata endpoint still returns something sensible."""
