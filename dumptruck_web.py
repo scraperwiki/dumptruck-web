@@ -174,6 +174,7 @@ def meta(boxhome=os.path.join('/', '%s/home' % os.environ['CO_STORAGE_DIR'])):
         res = {}
         res['databaseType'] = 'sqlite3'
         res['table'] = {}
+        res['grids'] = {}
         for name, type in dt.tablesAndViews():
             d = { "type": type }
             d['columnNames'] = list(dt.column_names(name))
@@ -185,7 +186,8 @@ def meta(boxhome=os.path.join('/', '%s/home' % os.environ['CO_STORAGE_DIR'])):
             # database not found is not an error for the meta endpoint
             code = 200
             body = json.dumps({"databaseType": "none",
-                "table": {}
+                "table": {},
+                "grids": {}
                 })
         else:
             code = e.code
