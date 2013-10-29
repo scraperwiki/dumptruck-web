@@ -194,6 +194,15 @@ class TestCGI(unittest.TestCase):
         self.dt.execute(
           "CREATE VIEW aview AS SELECT 1 as cola, 2 as colb",
           commit=False)
+        self.dt.insert({
+            'url': 'http://example.com/grid.html',
+            'checksum': 'a7950545bec5888726b6b7fc2b054258',
+            'title': 'My First Grid',
+            'number': 1,
+            'source_url': None,
+            'source_name': None,
+            'total': 3
+        })
         os.environ['QUERY_STRING'] = 'box=jack-in-a'
         header,body =  meta_helper().split('\n\n', 1)
         jbody = json.loads(body)
@@ -202,7 +211,7 @@ class TestCGI(unittest.TestCase):
         self.assertIn("newtable", jbody['table'])
         self.assertEqual(jbody['table']['newtable']['type'], "table")
 
-        # check column_names are listed:
+        # check table column_names are listed:
         n = jbody['table']['newtable']
         self.assertIn("columnNames", n)
         self.assertEqual(n['columnNames'], ["akey"])
@@ -211,10 +220,16 @@ class TestCGI(unittest.TestCase):
         self.assertIn("aview", jbody['table'])
         self.assertEqual(jbody['table']['aview']['type'], "view")
 
-        # check column_names are listed:
+        # check view column_names are listed:
         n = jbody['table']['aview']
         self.assertIn("columnNames", n)
         self.assertEqual(n['columnNames'], ["cola", "colb"])
+
+        # check grid is listed
+        self.assertIn('grids', jbody)
+        self.assertIn('a7950545bec5888726b6b7fc2b054258', jbody['grids'])
+        self.assertEqual(jbody['grids']['a7950545bec5888726b6b7fc2b054258']['title'], 'My First Grid')
+        self.assertEqual(jbody['grids']['a7950545bec5888726b6b7fc2b054258']['number'], 1)
 
 class TestAPI(unittest.TestCase):
     """API"""
