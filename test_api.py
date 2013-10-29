@@ -202,7 +202,7 @@ class TestCGI(unittest.TestCase):
             'source_url': None,
             'source_name': None,
             'total': 3
-        })
+        }, '_grids')
         os.environ['QUERY_STRING'] = 'box=jack-in-a'
         header,body =  meta_helper().split('\n\n', 1)
         jbody = json.loads(body)
