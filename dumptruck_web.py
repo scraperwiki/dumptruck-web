@@ -174,7 +174,7 @@ def meta(boxhome=os.path.join('/', '%s/home' % os.environ['CO_STORAGE_DIR'])):
         res = {}
         res['databaseType'] = 'sqlite3'
         res['table'] = {}
-        res['grids'] = {}
+        res['grid'] = {}
         for name, type in dt.tablesAndViews():
             d = { "type": type }
             d['columnNames'] = list(dt.column_names(name))
@@ -187,7 +187,7 @@ def meta(boxhome=os.path.join('/', '%s/home' % os.environ['CO_STORAGE_DIR'])):
             code = 200
             body = json.dumps({"databaseType": "none",
                 "table": {},
-                "grids": {}
+                "grid": {}
                 })
         else:
             code = e.code

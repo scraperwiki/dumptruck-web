@@ -120,7 +120,7 @@ class TestCGI(unittest.TestCase):
             'Content-Type: application/json; charset=utf-8')
         self.assertEqual(header, expected)
         # we expect an empty database.
-        expected = {"table": {}, "grids": {}, "databaseType": "sqlite3"}
+        expected = {"table": {}, "grid": {}, "databaseType": "sqlite3"}
         self.assertEqual(json.loads(body), expected)
 
     def testNotExist(self):
@@ -158,7 +158,7 @@ class TestCGI(unittest.TestCase):
             'Content-Type: application/json; charset=utf-8')
         self.assertEqual(header, expected)
         # we expect an empty database.
-        expected = {"table": {}, "grids": {}, "databaseType": "none"}
+        expected = {"table": {}, "grid": {}, "databaseType": "none"}
         # self.assertEqual(json.loads(body), expected)
 
     def testMetaTableListed(self):
@@ -179,7 +179,7 @@ class TestCGI(unittest.TestCase):
               "columnNames": ["blah blah", "blah"]
             },
           },
-          "grids": {
+          "grid": {
           }
           "databaseType": "sqlite"
         }
@@ -226,10 +226,10 @@ class TestCGI(unittest.TestCase):
         self.assertEqual(n['columnNames'], ["cola", "colb"])
 
         # check grid is listed
-        self.assertIn('grids', jbody)
-        self.assertIn('a7950545bec5888726b6b7fc2b054258', jbody['grids'])
-        self.assertEqual(jbody['grids']['a7950545bec5888726b6b7fc2b054258']['title'], 'My First Grid')
-        self.assertEqual(jbody['grids']['a7950545bec5888726b6b7fc2b054258']['number'], 1)
+        self.assertIn('grid', jbody)
+        self.assertIn('a7950545bec5888726b6b7fc2b054258', jbody['grid'])
+        self.assertEqual(jbody['grid']['a7950545bec5888726b6b7fc2b054258']['title'], 'My First Grid')
+        self.assertEqual(jbody['grid']['a7950545bec5888726b6b7fc2b054258']['number'], 1)
 
 class TestAPI(unittest.TestCase):
     """API"""
