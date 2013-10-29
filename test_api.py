@@ -9,7 +9,7 @@ import dumptruck
 from dumptruck_web import sql, meta
 
 # Directory in which boxes are created.
-BOXHOME = os.path.join('/', 'tmp', 'boxtests') 
+BOXHOME = os.path.join('/', 'tmp', 'boxtests')
 # The directory for a particular box.
 JACK = os.path.join(BOXHOME, 'jack-in-a')
 try:
@@ -120,7 +120,7 @@ class TestCGI(unittest.TestCase):
             'Content-Type: application/json; charset=utf-8')
         self.assertEqual(header, expected)
         # we expect an empty database.
-        expected = {"table": {}, "databaseType": "sqlite3"}
+        expected = {"table": {}, "grids": {}, "databaseType": "sqlite3"}
         self.assertEqual(json.loads(body), expected)
 
     def testNotExist(self):
@@ -158,7 +158,7 @@ class TestCGI(unittest.TestCase):
             'Content-Type: application/json; charset=utf-8')
         self.assertEqual(header, expected)
         # we expect an empty database.
-        expected = {"table": {}, "databaseType": "none"}
+        expected = {"table": {}, "grids": {}, "databaseType": "none"}
         # self.assertEqual(json.loads(body), expected)
 
     def testMetaTableListed(self):
@@ -179,6 +179,8 @@ class TestCGI(unittest.TestCase):
               "columnNames": ["blah blah", "blah"]
             },
           },
+          "grids": {
+          }
           "databaseType": "sqlite"
         }
         # With future expansion for columns that are typed:
@@ -272,7 +274,7 @@ class TestAPI(unittest.TestCase):
         """Can use other popular database filenames."""
         os.system('cp fixtures/sw.json.scraperwiki.sqlite ' + SW_JSON)
         self._q('scraperwiki.sqlite', 9804)
-        
+
     def test_no_sw_json(self):
         """Raises an error if there is no box.json."""
         os.system('rm -f ' + SW_JSON)
