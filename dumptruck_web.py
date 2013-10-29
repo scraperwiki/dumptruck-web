@@ -179,6 +179,10 @@ def meta(boxhome=os.path.join('/', '%s/home' % os.environ['CO_STORAGE_DIR'])):
             d = { "type": type }
             d['columnNames'] = list(dt.column_names(name))
             res['table'][name] = d
+        if '_grids' in res['table']:
+            code, grids = execute_query('SELECT * FROM _grids', dbname)
+            for grid in grids:
+                res['grid'][grid['checksum']] = grid
         body = json.dumps(res)
         code = 200
     except NotOK as e:
