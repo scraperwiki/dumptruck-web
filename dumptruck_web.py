@@ -174,10 +174,15 @@ def meta(boxhome=os.path.join('/', '%s/home' % os.environ['CO_STORAGE_DIR'])):
         res = {}
         res['databaseType'] = 'sqlite3'
         res['table'] = {}
+        res['grid'] = {}
         for name, type in dt.tablesAndViews():
             d = { "type": type }
             d['columnNames'] = list(dt.column_names(name))
             res['table'][name] = d
+        if '_grids' in res['table']:
+            code, grids = execute_query('SELECT * FROM _grids', dbname)
+            for grid in grids:
+                res['grid'][grid['checksum']] = grid
         body = json.dumps(res)
         code = 200
     except NotOK as e:
@@ -185,7 +190,8 @@ def meta(boxhome=os.path.join('/', '%s/home' % os.environ['CO_STORAGE_DIR'])):
             # database not found is not an error for the meta endpoint
             code = 200
             body = json.dumps({"databaseType": "none",
-                "table": {}
+                "table": {},
+                "grid": {}
                 })
         else:
             code = e.code

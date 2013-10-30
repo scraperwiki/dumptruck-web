@@ -9,7 +9,7 @@ import dumptruck
 from dumptruck_web import sql, meta
 
 # Directory in which boxes are created.
-BOXHOME = os.path.join('/', 'tmp', 'boxtests') 
+BOXHOME = os.path.join('/', 'tmp', 'boxtests')
 # The directory for a particular box.
 JACK = os.path.join(BOXHOME, 'jack-in-a')
 try:
@@ -120,7 +120,7 @@ class TestCGI(unittest.TestCase):
             'Content-Type: application/json; charset=utf-8')
         self.assertEqual(header, expected)
         # we expect an empty database.
-        expected = {"table": {}, "databaseType": "sqlite3"}
+        expected = {"table": {}, "grid": {}, "databaseType": "sqlite3"}
         self.assertEqual(json.loads(body), expected)
 
     def testNotExist(self):
@@ -158,7 +158,7 @@ class TestCGI(unittest.TestCase):
             'Content-Type: application/json; charset=utf-8')
         self.assertEqual(header, expected)
         # we expect an empty database.
-        expected = {"table": {}, "databaseType": "none"}
+        expected = {"table": {}, "grid": {}, "databaseType": "none"}
         # self.assertEqual(json.loads(body), expected)
 
     def testMetaTableListed(self):
@@ -179,6 +179,8 @@ class TestCGI(unittest.TestCase):
               "columnNames": ["blah blah", "blah"]
             },
           },
+          "grid": {
+          }
           "databaseType": "sqlite"
         }
         # With future expansion for columns that are typed:
@@ -192,6 +194,15 @@ class TestCGI(unittest.TestCase):
         self.dt.execute(
           "CREATE VIEW aview AS SELECT 1 as cola, 2 as colb",
           commit=False)
+        self.dt.insert({
+            'url': 'http://example.com/grid.html',
+            'checksum': 'a7950545bec5888726b6b7fc2b054258',
+            'title': 'My First Grid',
+            'number': 1,
+            'source_url': None,
+            'source_name': None,
+            'total': 3
+        }, '_grids')
         os.environ['QUERY_STRING'] = 'box=jack-in-a'
         header,body =  meta_helper().split('\n\n', 1)
         jbody = json.loads(body)
@@ -200,7 +211,7 @@ class TestCGI(unittest.TestCase):
         self.assertIn("newtable", jbody['table'])
         self.assertEqual(jbody['table']['newtable']['type'], "table")
 
-        # check column_names are listed:
+        # check table column_names are listed:
         n = jbody['table']['newtable']
         self.assertIn("columnNames", n)
         self.assertEqual(n['columnNames'], ["akey"])
@@ -209,10 +220,16 @@ class TestCGI(unittest.TestCase):
         self.assertIn("aview", jbody['table'])
         self.assertEqual(jbody['table']['aview']['type'], "view")
 
-        # check column_names are listed:
+        # check view column_names are listed:
         n = jbody['table']['aview']
         self.assertIn("columnNames", n)
         self.assertEqual(n['columnNames'], ["cola", "colb"])
+
+        # check grid is listed
+        self.assertIn('grid', jbody)
+        self.assertIn('a7950545bec5888726b6b7fc2b054258', jbody['grid'])
+        self.assertEqual(jbody['grid']['a7950545bec5888726b6b7fc2b054258']['title'], 'My First Grid')
+        self.assertEqual(jbody['grid']['a7950545bec5888726b6b7fc2b054258']['number'], 1)
 
 class TestAPI(unittest.TestCase):
     """API"""
@@ -272,7 +289,7 @@ class TestAPI(unittest.TestCase):
         """Can use other popular database filenames."""
         os.system('cp fixtures/sw.json.scraperwiki.sqlite ' + SW_JSON)
         self._q('scraperwiki.sqlite', 9804)
-        
+
     def test_no_sw_json(self):
         """Raises an error if there is no box.json."""
         os.system('rm -f ' + SW_JSON)
