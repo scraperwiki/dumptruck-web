@@ -251,7 +251,7 @@ class TestAPI(unittest.TestCase):
         if not os.path.isdir(JACK):
             os.makedirs(JACK)
 
-        dbname = os.path.join(JACK, os.path.expanduser(dbname))
+        dbname = os.path.expanduser(dbname)
         dt = dumptruck.DumpTruck(dbname)
         dt.drop('bacon', if_exists=True)
         dt.insert({'p': p}, 'bacon')
@@ -278,7 +278,7 @@ class TestAPI(unittest.TestCase):
     def test_dumptruck(self):
         """Works with ordinary file."""
         os.system('cp fixtures/sw.json.dumptruck.db ' + SW_JSON)
-        self._q('dumptruck.db', 2124)
+        self._q('~/dumptruck.db', 2124)
 
     def test_home_dumptruck(self):
         """Uses database found in home directory."""
@@ -288,12 +288,16 @@ class TestAPI(unittest.TestCase):
     def test_scraperwiki(self):
         """Can use other popular database filenames."""
         os.system('cp fixtures/sw.json.scraperwiki.sqlite ' + SW_JSON)
-        self._q('scraperwiki.sqlite', 9804)
+        self._q('~/scraperwiki.sqlite', 9804)
 
-    def test_no_sw_json(self):
-        """Raises an error if there is no box.json."""
+    def test_default_sqlite(self):
+        """When no box.json uses scraperwiki.sqlite as a
+        default."""
+
+        # Remove the box.json file.
         os.system('rm -f ' + SW_JSON)
-        self._q(':memory:', 2938, output_check='No box.json', code_check=500)
+        self._q('scraperwiki.sqlite', 2938,
+          output_check='2938', code_check=200)
 
     def test_malformed_json(self):
         """Raises an error if there is a malformed box.json."""
