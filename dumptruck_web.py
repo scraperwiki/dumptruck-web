@@ -92,14 +92,23 @@ def open_dumptruck(dbname):
     if os.path.isfile(dbname):
         # Check for the database file
         try:
-            dt = dumptruck.DumpTruck(dbname, adapt_and_convert = False)
+            dt = dumptruck.DumpTruck(dbname, adapt_and_convert=False)
         except sqlite3.OperationalError, e:
+            error = e.message
             if e.message == 'unable to open database file':
-                msg = e.message + ' (Check that the file exists and is readable by everyone.)'
-                code = 500
-                raise NotOK(code, msg)
+                error = e.message + ' (Check that the file exists and is readable by everyone.)'
+            msg = {
+              "error": error,
+              "filename": dbname,
+              "source": "sqlite3"
+            }
+            code = 404
+            raise NotOK(code, msg)
     else:
-        msg = {"error": "database file does not exist."}
+        msg = {
+            "error": "database file does not exist.",
+            "filename": dbname
+          }
         code = 404
         raise NotOK(code, msg)
 
@@ -214,18 +223,27 @@ def parse_query_string():
     box = boxs[0]
     return sql, box
 
-def get_database_name(boxhome, box):
-    """Use the database file specified by the "database" field in ~/box.json."""
+def get_database_name(boxhome, box, default='scraperwiki.sqlite'):
+    """
+    Return the name of the database file to use.
+
+    This is normally specified by the "database" field in ~/box.json;
+    if that file doesn't exist, use *default*.
+    """
 
     path = os.path.join(boxhome, box, 'box.json')
     if not os.path.exists(path):
         path = os.path.join(boxhome, box, 'scraperwiki.json')
 
     try:
-        with open(path) as f:
-            sw_json = f.read()
+        fd = open(path)
     except IOError:
-        raise QueryError('Error: No box.json file', code=500)
+        if default:
+            return default
+        raise QueryError('Error: SAFDSDFD No box.json file', code=500)
+
+    with fd as f:
+        sw_json = f.read()
 
     try:
         sw_data = json.loads(sw_json)
