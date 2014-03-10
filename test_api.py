@@ -291,9 +291,9 @@ class TestAPI(unittest.TestCase):
         self._q('scraperwiki.sqlite', 9804)
 
     def test_no_sw_json(self):
-        """Raises an error if there is no box.json."""
+        """Does not raise an an error if there is no box.json."""
         os.system('rm -f ' + SW_JSON)
-        self._q(':memory:', 2938, output_check='No box.json', code_check=500)
+        self._q(':memory:', 2938, output_check='2938', code_check=200)
 
     def test_malformed_json(self):
         """Raises an error if there is a malformed box.json."""
