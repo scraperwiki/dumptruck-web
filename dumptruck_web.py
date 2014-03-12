@@ -231,29 +231,36 @@ def get_database_name(boxhome, box, default='scraperwiki.sqlite'):
     if that file doesn't exist, use *default*.
     """
 
-    path = os.path.join(boxhome, box, 'box.json')
-    if not os.path.exists(path):
-        path = os.path.join(boxhome, box, 'scraperwiki.json')
+    boxfile = os.path.join(boxhome, box, 'box.json')
+    if not os.path.exists(boxfile):
+        boxfile = os.path.join(boxhome, box, 'scraperwiki.json')
 
+    dbname = None
+    box_fd = None
     try:
-        fd = open(path)
+        box_fd = open(boxfile)
     except IOError:
         if default:
-            return default
-        raise QueryError('Error: No box.json file', code=500)
+            dbname = default
+        else:
+            raise QueryError('Error: No box.json file', code=500)
 
-    with fd as f:
-        sw_json = f.read()
+    if box_fd:
+        sw_json = box_fd.read()
+        box_fd.close()
 
-    try:
-        sw_data = json.loads(sw_json)
-    except ValueError:
-        raise QueryError('Malformed box.json file', code=500)
+        try:
+            sw_data = json.loads(sw_json)
+        except ValueError:
+            raise QueryError('Malformed box.json file', code=500)
+        try:
+            dbname = sw_data['database']
+        except KeyError:
+            raise QueryError('No "database" attribute in box.json', code=500)
 
-    try:
-        dbname = os.path.join(boxhome, box, os.path.expanduser(sw_data['database']))
-    except KeyError:
-        raise QueryError('No "database" attribute in box.json', code=500)
+    assert dbname
+
+    dbname = os.path.join(boxhome, box, os.path.expanduser(dbname))
 
     return dbname
 
