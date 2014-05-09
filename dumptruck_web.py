@@ -239,7 +239,7 @@ def get_database_name(boxhome, box, default='scraperwiki.sqlite'):
         fd = open(path)
     except IOError:
         if default:
-            return default
+            return os.path.join(boxhome, box, default)
         raise QueryError('Error: No box.json file', code=500)
 
     with fd as f:

@@ -296,7 +296,7 @@ class TestAPI(unittest.TestCase):
 
         # Remove the box.json file.
         os.system('rm -f ' + SW_JSON)
-        self._q('scraperwiki.sqlite', 2938,
+        self._q('~/scraperwiki.sqlite', 2938,
           output_check='2938', code_check=200)
 
     def test_malformed_json(self):
